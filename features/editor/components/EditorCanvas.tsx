@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { Stage, Layer, Rect, Text, Group, Arrow, Image } from 'react-konva';
 import useImage from 'use-image';
 import { KonvaEventObject } from 'konva/lib/Node';
-import { useEditorStore } from '../store/useEditorStore';
+import { useEditorContext as useEditorStore } from '../store/EditorContext';
 import { BackgroundLayer } from './BackgroundLayer';
 import { DrawingLayer } from './DrawingLayer';
 import { v4 as uuidv4 } from 'uuid';
@@ -169,7 +169,7 @@ function BoundsLayer({ canvasWidth, canvasHeight, unit = 'inch', imageUrl, holfa
 }
 
 export function EditorCanvas({ imageUrl, canvasWidth, canvasHeight, unit, holfass, kabja, hasVentilator, ventilatorImageUrl }: EditorCanvasProps) {
-  const { scale, position, setScale, setPosition, tool, strokeColor, strokeWidth, addElement, updateElement, elements, setSelectedIds, setStageRef } = useEditorStore();
+  const { scale, position, setScale, setPosition, tool, strokeColor, strokeWidth, addElement, updateElement, elements, setSelectedIds, setStageRef } = useEditorStore((state) => state);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -406,8 +406,9 @@ export function EditorCanvas({ imageUrl, canvasWidth, canvasHeight, unit, holfas
   };
 
   return (
-    <div ref={containerRef} className="w-full h-full bg-[#f8f9fa] overflow-hidden">
-      <Stage
+    <div ref={containerRef} className="w-full h-full bg-[#f8f9fa] overflow-hidden relative">
+      <div className="absolute inset-0">
+        <Stage
         ref={setStageRef}
         width={dimensions.width}
         height={dimensions.height}
@@ -430,6 +431,7 @@ export function EditorCanvas({ imageUrl, canvasWidth, canvasHeight, unit, holfas
         )}
         <DrawingLayer />
       </Stage>
+      </div>
 
       {editingText && (
         <textarea

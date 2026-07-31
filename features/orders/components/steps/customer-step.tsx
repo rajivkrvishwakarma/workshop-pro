@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/use-debounce';
-import { useGetCustomerByMobile } from '@/hooks/api/use-customers';
+import { useGetCustomerByMobile, useSearchCustomers } from '@/hooks/api/use-customers';
 import { toast } from 'sonner';
 
 export function CustomerStep({ onNext, onResumeDraft, defaultData }: { onNext: (data: any) => void, onResumeDraft?: (orderId: string) => void, defaultData?: any }) {
@@ -18,9 +18,13 @@ export function CustomerStep({ onNext, onResumeDraft, defaultData }: { onNext: (
   const debouncedMobile = useDebounce(formData.mobile, 500);
 
   const { data: customerData, isFetching: isLoadingCustomer } = useGetCustomerByMobile(debouncedMobile);
+  const { data: searchData, isFetching: isSearching } = useSearchCustomers(debouncedMobile);
+  
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     if (customerData && customerData.success && customerData.data) {
+      // Only auto-fill if not manually editing other fields (a more advanced check could be used, but this is fine)
       setFormData((prev: any) => ({
         ...prev,
         id: customerData.data.id,
@@ -31,6 +35,17 @@ export function CustomerStep({ onNext, onResumeDraft, defaultData }: { onNext: (
       setFormData((prev: any) => ({ ...prev, id: '' }));
     }
   }, [customerData]);
+
+  const handleSelectSuggestion = (customer: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      id: customer.id,
+      name: customer.name || prev.name,
+      mobile: customer.mobile,
+      address: customer.address || prev.address
+    }));
+    setShowDropdown(false);
+  };
 
   const recentOrders = customerData?.data?.orders || [];
 
@@ -79,7 +94,7 @@ export function CustomerStep({ onNext, onResumeDraft, defaultData }: { onNext: (
     <div className="flex-1 w-full flex flex-col relative h-full bg-background md:bg-transparent">
       <MobileHeader title="Customer Details" onBack={() => router.back()} />
       
-      <form onSubmit={handleSubmit} className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 md:pt-4 overflow-y-auto">
+      <form onSubmit={handleSubmit} className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 pb-32 md:pt-4 md:pb-8 overflow-y-auto">
         <div className="hidden md:block mb-8">
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Customer Details</h2>
           <p className="text-muted-foreground text-sm mt-1">Enter the client information for this order.</p>
@@ -95,11 +110,30 @@ export function CustomerStep({ onNext, onResumeDraft, defaultData }: { onNext: (
                 placeholder="e.g. +91 98765 43210"
                 className="w-full bg-surface-container-low border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-primary"
                 value={formData.mobile}
-                onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, mobile: e.target.value });
+                  setShowDropdown(true);
+                }}
+                onFocus={() => setShowDropdown(true)}
               />
-              {isLoadingCustomer && (
+              {(isLoadingCustomer || isSearching) && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                </div>
+              )}
+              
+              {showDropdown && searchData?.data && searchData.data.length > 0 && (
+                <div className="absolute top-full mt-1 w-full bg-surface border border-outline-variant rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                  {searchData.data.map((customer: any) => (
+                    <div 
+                      key={customer.id}
+                      onClick={() => handleSelectSuggestion(customer)}
+                      className="px-4 py-3 hover:bg-surface-variant cursor-pointer border-b border-outline-variant last:border-0 flex flex-col"
+                    >
+                      <span className="font-medium text-on-surface text-sm">{customer.mobile}</span>
+                      <span className="text-xs text-on-surface-variant">{customer.name}</span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

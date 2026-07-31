@@ -9,6 +9,13 @@ export const useGetOrder = (id?: string | null) => {
   });
 };
 
+export const useGetOrders = (filters?: { search?: string, statusId?: string, customerId?: string }) => {
+  return useQuery({
+    queryKey: ['orders', filters],
+    queryFn: () => get<any>('/orders', filters).then(res => res.data),
+  });
+};
+
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({

@@ -42,21 +42,19 @@ export const NAV_SECTIONS: NavSection[] = [
     label: 'Operations',
     items: [
       {
-        label: 'Customers',
-        href: ROUTES.CUSTOMERS,
-        icon: Users,
-        // requiredPermission: PERMISSIONS.CUSTOMERS.VIEW,
-      },
-      {
         label: 'Orders',
         href: ROUTES.ORDERS,
         icon: ClipboardList,
-        // requiredPermission: PERMISSIONS.ORDERS.VIEW,
       },
       {
         label: 'New Order',
         href: '/orders/new',
         icon: ClipboardList,
+      },
+      {
+        label: 'Customers',
+        href: ROUTES.CUSTOMERS,
+        icon: Users,
       },
       {
         label: 'Production',

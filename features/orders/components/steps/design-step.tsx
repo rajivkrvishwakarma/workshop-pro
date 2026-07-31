@@ -77,7 +77,8 @@ export function DesignStep({ onNext, onBack, onChange, defaultData, productData 
   }, [width, height, unit, material, holfass, kabja, hasVentilator, ventilatorImageUrl, category]);
 
   const handleProceed = () => {
-    onNext({ design: { width, height, unit, material, templateId: category, holfass, kabja, hasVentilator, ventilatorImageUrl } });
+    const elements = useEditorStore.getState().elements;
+    onNext({ design: { width, height, unit, material, templateId: category, holfass, kabja, hasVentilator, ventilatorImageUrl, elements } });
   };
 
   return (
@@ -133,7 +134,7 @@ export function DesignStep({ onNext, onBack, onChange, defaultData, productData 
           </div>
 
           {/* Sheet Content Body (Scrollable) */}
-          <div className="flex-1 overflow-y-auto px-container-margin py-4 flex flex-col gap-md pb-12">
+          <div className="flex-1 overflow-y-auto px-container-margin py-4 flex flex-col gap-md pb-32 md:pb-12">
             
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">

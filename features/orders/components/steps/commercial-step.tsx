@@ -49,7 +49,7 @@ export function CommercialStep({ orderId, onNext, onBack, defaultData }: { order
     <div className="flex-1 w-full flex flex-col relative h-full bg-background md:bg-transparent">
       <MobileHeader title="Commercials" onBack={onBack} />
       
-      <form onSubmit={handleSubmit} className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 md:pt-4 overflow-y-auto">
+      <form onSubmit={handleSubmit} className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 pb-32 md:pt-4 md:pb-8 overflow-y-auto">
         <div className="hidden md:block mb-8">
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Commercials & Deadline</h2>
           <p className="text-muted-foreground text-sm mt-1">Set rates, advances, and delivery estimates.</p>

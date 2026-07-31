@@ -1,20 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ProductStep } from './product-step';
-import { DesignStep } from './design-step';
-import { useEditorStore } from '@/features/editor/store/useEditorStore';
+import { MeasurementBlock } from './measurement-block';
 import { useUpdateOrder } from '@/hooks/api/use-orders';
-import { Trash2, Edit, Plus, Image as ImageIcon, ArrowRight } from 'lucide-react';
+import { Plus, ArrowRight } from 'lucide-react';
 import { MobileHeader } from '@/components/layout/mobile-header';
 import { Button } from '@/components/ui/button';
 
 export function ProductsManagerStep({ orderId, onNext, onBack, defaultData = [] }: { orderId?: string, onNext: (data: any) => void, onBack: () => void, defaultData?: any[] }) {
   const [items, setItems] = useState<any[]>(defaultData);
-  const [view, setView] = useState<'list' | 'product' | 'design'>('list');
-  const [editingIndex, setEditingIndex] = useState<number>(-1);
-  const [draftItem, setDraftItem] = useState<any>(null);
+  const [view, setView] = useState<'list' | 'product'>('list');
   
   const { mutate: updateOrder } = useUpdateOrder();
 
@@ -25,61 +22,60 @@ export function ProductsManagerStep({ orderId, onNext, onBack, defaultData = [] 
     }
   }, [items.length, view]);
 
-  // Removed on-mount auto save to prevent wiping out data
-  // We now explicitly save when items are modified.
-
   const handleAddProduct = () => {
-    setDraftItem({ id: uuidv4() });
-    setEditingIndex(-1);
     setView('product');
   };
 
-  const handleEditItem = (index: number) => {
-    const item = items[index];
-    setDraftItem(item);
-    setEditingIndex(index);
-    // Load existing elements into store
-    useEditorStore.getState().loadState(item.design?.elements || []);
-    setView('design');
-  };
-
-  const handleDeleteItem = (index: number) => {
-    const newItems = [...items];
-    newItems.splice(index, 1);
-    setItems(newItems);
-    onNext({ items: newItems }); // Auto-save list state
-    if (orderId) updateOrder({ id: orderId, data: { items: newItems } });
-  };
-
   const handleProductSubmit = (data: any) => {
-    const updatedDraft = { ...draftItem, product: data.product };
-    setDraftItem(updatedDraft);
+    const newItem = {
+      id: uuidv4(),
+      product: data.product,
+      design: {
+        width: 0,
+        height: 0,
+        unit: 'inch',
+        material: 'Mild Steel',
+        templateId: data.product.category,
+        elements: []
+      }
+    };
     
-    if (editingIndex === -1) {
-      useEditorStore.getState().loadState([]);
-    } else {
-      useEditorStore.getState().loadState(updatedDraft.design?.elements || []);
-    }
-    setView('design');
+    setItems(prev => {
+      const newItems = [...prev, newItem];
+      // Auto save on add
+      if (orderId) {
+        updateOrder({ id: orderId, data: { items: newItems } });
+      }
+      return newItems;
+    });
+    
+    setView('list');
   };
 
-  const handleSaveAndReturn = (designData: any) => {
-    const currentElements = useEditorStore.getState().elements;
-    const finalDesign = { ...designData.design, elements: currentElements };
-    
-    const updatedDraft = { ...draftItem, design: finalDesign };
-    
-    const newItems = [...items];
-    if (editingIndex === -1) {
-      newItems.push(updatedDraft);
-    } else {
-      newItems[editingIndex] = updatedDraft;
-    }
-    
-    setItems(newItems);
-    onNext({ items: newItems }); // Push state to parent
-    if (orderId) updateOrder({ id: orderId, data: { items: newItems } });
-    setView('list');
+  const handleItemChange = useCallback((index: number, updatedItem: any) => {
+    setItems(prev => {
+      const newItems = [...prev];
+      newItems[index] = updatedItem;
+      // Auto save on change
+      if (orderId) {
+        updateOrder({ id: orderId, data: { items: newItems } });
+      }
+      return newItems;
+    });
+  }, [orderId, updateOrder]);
+
+  const handleDeleteItem = useCallback((index: number) => {
+    setItems(prev => {
+      const newItems = [...prev];
+      newItems.splice(index, 1);
+      if (orderId) updateOrder({ id: orderId, data: { items: newItems } });
+      return newItems;
+    });
+  }, [orderId, updateOrder]);
+
+  const handleSaveAndProceed = () => {
+    onNext({ items });
+    if (orderId) updateOrder({ id: orderId, data: { items } });
   };
 
   if (view === 'product') {
@@ -90,145 +86,84 @@ export function ProductsManagerStep({ orderId, onNext, onBack, defaultData = [] 
           if (items.length === 0) onBack(); // Go back to customer step if no items exist
           else setView('list');
         }} 
-        defaultData={draftItem?.product} 
       />
     );
   }
 
-  if (view === 'design') {
-    return (
-      <DesignStep 
-        onNext={handleSaveAndReturn} 
-        onBack={() => setView('product')} 
-        onChange={(designData) => {
-          // Auto-save the design draft into the main items array without leaving the view
-          setDraftItem((prevDraft: any) => {
-            if (!prevDraft) return null;
-            const currentElements = useEditorStore.getState().elements;
-            const finalDesign = { ...designData.design, elements: currentElements };
-            const updatedDraft = { ...prevDraft, design: finalDesign };
-            
-            setItems((prevItems: any[]) => {
-              const existingIndex = prevItems.findIndex(i => i.id === updatedDraft.id);
-              const newItems = [...prevItems];
-              if (existingIndex >= 0) {
-                 newItems[existingIndex] = updatedDraft;
-              } else {
-                 newItems.push(updatedDraft);
-                 setEditingIndex(newItems.length - 1);
-              }
-              return newItems;
-            });
-            
-            // Background auto-save for the current draft
-            if (orderId) {
-              setItems((latestItems) => {
-                updateOrder({ id: orderId, data: { items: latestItems } });
-                return latestItems;
-              });
-            }
-            
-            return updatedDraft;
-          });
-        }}
-        defaultData={draftItem?.design} 
-        productData={draftItem?.product} 
-      />
-    );
-  }
-
-  // LIST VIEW
+  // LIST VIEW (Continuous Canvas View)
   return (
-    <div className="flex-1 w-full flex flex-col relative h-full">
+    <div className="flex-1 w-full flex flex-col relative h-full bg-background overflow-hidden">
       <MobileHeader 
-        title="Order Items" 
+        title="Measurements" 
         onBack={onBack} 
         rightAction={
           <Button variant="ghost" size="icon" onClick={handleAddProduct} className="text-primary hover:bg-surface-container-low w-10 h-10 rounded-full">
-            <Plus className="w-5 h-5" />
+            <Plus className="w-6 h-6" />
           </Button>
         } 
       />
 
-      <div className="space-y-6 animate-in fade-in duration-300 p-4 md:p-0 flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto w-full max-w-6xl mx-auto p-4 pb-32 md:p-6 md:pb-8 flex flex-col gap-6">
+        
+        {/* Desktop Header */}
         <div className="hidden md:flex items-center justify-between border-b border-outline-variant pb-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Order Items</h2>
-          <p className="text-muted-foreground text-sm mt-1">Manage all products and gates for this order.</p>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Measurements</h2>
+            <p className="text-muted-foreground text-sm mt-1">Design and measure all products for this order.</p>
+          </div>
+          <button 
+            onClick={handleAddProduct}
+            className="flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary/20 transition-all"
+          >
+            <Plus className="w-5 h-5" /> Add Another Product
+          </button>
         </div>
-        <button 
-          onClick={handleAddProduct}
-          className="flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary/20 transition-all"
-        >
-          <Plus className="w-4 h-4" /> Add Another Product
-        </button>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items.map((item, index) => (
-          <div key={item.id || index} className="bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
-            <div className="h-40 bg-muted/30 relative flex items-center justify-center border-b">
-              {item.product?.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.product.imageUrl} alt={item.product.category} className="w-full h-full object-contain p-4" />
-              ) : (
-                <ImageIcon className="w-10 h-10 text-muted-foreground/30" />
-              )}
-              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                  onClick={() => handleEditItem(index)}
-                  className="p-1.5 bg-surface border border-outline-variant rounded-md shadow-sm hover:text-primary transition-colors"
-                  title="Edit Product"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => handleDeleteItem(index)}
-                  className="p-1.5 bg-surface border border-outline-variant rounded-md shadow-sm hover:text-destructive transition-colors"
-                  title="Delete Product"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            <div className="p-4">
-              <h4 className="font-bold text-lg">{item.product?.category || 'Custom Item'}</h4>
-              {item.product?.description && <p className="text-sm text-muted-foreground truncate mb-2">{item.product.description}</p>}
-              
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <span className="text-xs font-semibold bg-primary/10 text-primary px-2 py-1 rounded">
-                  {item.design?.width || '?'} x {item.design?.height || '?'} {item.design?.unit || 'inch'}
-                </span>
-                <span className="text-xs text-muted-foreground font-medium">
-                  {item.design?.material || 'Unknown Material'}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
+        {/* Measurement Blocks List */}
+        <div className="flex flex-col gap-8 pb-20">
+          {items.map((item, index) => (
+            <MeasurementBlock 
+              key={item.id} 
+              item={item} 
+              index={index}
+              onChange={(updated) => handleItemChange(index, updated)}
+              onDelete={() => handleDeleteItem(index)}
+            />
+          ))}
 
-        <div 
-          onClick={handleAddProduct}
-          className="border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-primary hover:bg-surface-container-low transition-all min-h-[250px] text-muted-foreground hover:text-primary group bg-surface"
-        >
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <Plus className="w-6 h-6" />
-          </div>
-          <span className="font-semibold text-lg">Add Product</span>
-          <span className="text-sm mt-1 text-center">Add another gate, window, or item to this order</span>
+          {/* Add Another Product Box */}
+          {items.length > 0 && (
+            <div 
+              onClick={handleAddProduct}
+              className="border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-primary hover:bg-surface-container-low transition-all bg-surface text-muted-foreground hover:text-primary group shadow-sm"
+            >
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Plus className="w-6 h-6 text-primary" />
+              </div>
+              <span className="font-semibold text-lg text-foreground group-hover:text-primary">Add Product</span>
+              <span className="text-sm mt-1 text-center">Add another gate, window, or item to this order</span>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex justify-between pt-6 border-t mt-8">
-        <button type="button" onClick={onBack} className="px-6 py-2.5 border-2 rounded-lg hover:bg-muted font-semibold transition-all">Back</button>
-        <button 
-          type="button" 
-          onClick={() => onNext({ items })} 
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-8 py-2.5 rounded-lg font-semibold hover:bg-primary/90 transition-all shadow-md hover:shadow-lg"
-        >
-          Proceed to Attachments <ArrowRight className="w-4 h-4" />
-        </button>
-      </div>
+      {/* Floating Action Bar */}
+      <div className="fixed bottom-0 left-0 w-full bg-surface/80 backdrop-blur-md border-t border-outline-variant p-4 z-40 pb-[calc(env(safe-area-inset-bottom)+1rem)] md:pb-4 flex justify-between items-center gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <div className="hidden md:block text-sm text-muted-foreground font-medium ml-4">
+          {items.length} product{items.length !== 1 ? 's' : ''} in order
+        </div>
+        <div className="flex w-full md:w-auto gap-4 md:mr-4">
+          <button type="button" onClick={onBack} className="flex-1 md:flex-none px-6 py-2.5 border-2 border-outline-variant rounded-lg font-semibold hover:bg-surface-variant transition-all text-on-surface">
+            Back
+          </button>
+          <button 
+            type="button" 
+            onClick={handleSaveAndProceed} 
+            className="flex-2 md:flex-none flex items-center justify-center gap-2 bg-primary text-on-primary px-8 py-2.5 rounded-lg font-semibold hover:bg-primary/90 transition-all shadow-md hover:shadow-lg"
+          >
+            Save & Proceed <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

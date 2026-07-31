@@ -10,6 +10,15 @@ export const useGetCustomerByMobile = (mobile: string) => {
   });
 };
 
+export const useSearchCustomers = (query: string) => {
+  return useQuery({
+    queryKey: ['customers', 'search', query],
+    queryFn: () => get<any>('/customers', { query }),
+    enabled: query.length >= 4,
+    staleTime: 1000 * 60, // 1 minute cache
+  });
+};
+
 export const useCreateCustomer = () => {
   const queryClient = useQueryClient();
   return useMutation({

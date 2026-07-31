@@ -1,5 +1,5 @@
 import { Layer, Line, Rect, Circle, Arrow, Transformer, Group, Text } from 'react-konva';
-import { useEditorStore } from '../store/useEditorStore';
+import { useEditorContext as useEditorStore } from '../store/EditorContext';
 import { useEffect, useRef } from 'react';
 import { EditorElement } from '../types';
 import Konva from 'konva';

@@ -28,7 +28,7 @@ const SKIP_PATTERNS = [
   /\.(ico|png|jpg|jpeg|svg|webp|gif|woff|woff2|ttf|otf|css|js|map)$/,
 ];
 
-const secretStr = process.env.SESSION_SECRET;
+const secretStr = process.env.JWT_SECRET;
 const secret = secretStr ? new TextEncoder().encode(secretStr) : undefined;
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {

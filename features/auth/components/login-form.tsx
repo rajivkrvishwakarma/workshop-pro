@@ -53,7 +53,8 @@ export function LoginForm() {
       // or to trigger middleware correctly if needed, but router.push is fine for Next.js App router
       window.location.href = callbackUrl || ROUTES.DASHBOARD;
     } catch (error: any) {
-      toast.error(error.message || "Failed to log in. Please check your credentials.");
+      const errorMessage = error.response?.data?.error?.message || error.message || "Failed to log in. Please check your credentials.";
+      toast.error(errorMessage);
       console.error(error);
     } finally {
       setIsLoading(false);

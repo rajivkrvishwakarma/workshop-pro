@@ -12,7 +12,7 @@ import {
   Redo2,
   Download
 } from 'lucide-react';
-import { useEditorStore, ToolType } from '../store/useEditorStore';
+import { useEditorContext as useEditorStore } from '../store/EditorContext';
 
 const TOOLS: { id: ToolType; icon: React.ReactNode; label: string }[] = [
   { id: 'select', icon: <MousePointer2 className="w-4 h-4" />, label: 'Select' },

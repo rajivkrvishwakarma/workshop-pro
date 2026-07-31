@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Layer, Rect, Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
-import { useEditorStore } from '../store/useEditorStore';
+import { useEditorContext as useEditorStore } from '../store/EditorContext';
 
 interface BackgroundLayerProps {
   width: number;

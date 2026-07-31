@@ -36,8 +36,9 @@ export async function POST(_request: NextRequest): Promise<NextResponse> {
       { status: 200 }
     );
 
-    // Also clear the auth service refreshToken cookie
+    // Also clear the auth service refreshToken cookie and proxy accessToken cookie
     response.cookies.delete('refreshToken');
+    response.cookies.delete('accessToken');
 
     return response;
   } catch (error) {

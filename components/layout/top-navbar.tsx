@@ -28,8 +28,17 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const rootPaths = ['/', '/dashboard', '/customers', '/settings', '/profile'];
+  const rootPaths = ['/', '/dashboard', '/orders', '/settings', '/profile'];
   const isSubPage = !rootPaths.includes(pathname);
+
+  const getPageTitle = (path: string) => {
+    if (path === '/dashboard') return 'Dashboard';
+    if (path === '/orders') return 'All Orders';
+    if (path.startsWith('/orders/') && path !== '/orders/new') return 'Order Details';
+    if (path === '/settings') return 'Settings';
+    if (path === '/profile') return 'Profile';
+    return '';
+  };
 
   const handleLogout = async () => {
     try {
@@ -43,27 +52,32 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-outline-variant bg-surface px-4 shadow-sm md:px-6">
       <div className="flex items-center gap-4">
-        {isSubPage ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span className="sr-only">Go Back</span>
-          </Button>
-        ) : onMenuClick ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={onMenuClick}
-          >
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle Menu</span>
-          </Button>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {isSubPage ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span className="sr-only">Go Back</span>
+            </Button>
+          ) : onMenuClick ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={onMenuClick}
+            >
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle Menu</span>
+            </Button>
+          ) : null}
+          <h1 className="text-lg font-bold text-primary md:hidden truncate max-w-[180px]">
+            {getPageTitle(pathname)}
+          </h1>
+        </div>
         <div className="relative hidden max-w-md md:flex">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input

@@ -70,7 +70,7 @@ export function ProductStep({ onNext, onBack, defaultData }: { onNext: (data: an
     <div className="flex-1 w-full flex flex-col relative h-full">
       <MobileHeader title="New Order" onBack={onBack} />
       
-      <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 md:pt-4 overflow-y-auto">
+      <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 pb-32 md:pt-4 md:pb-8 overflow-y-auto">
 
 
       {/* Headline & Instructions */}
@@ -128,7 +128,7 @@ export function ProductStep({ onNext, onBack, defaultData }: { onNext: (data: an
               Pick a reference image for your canvas (optional).
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-surface-container-lowest">
+          <div className="flex-1 overflow-y-auto p-4 pb-32 md:p-6 md:pb-8 bg-surface-container-lowest">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {availableImages.map((img: any) => (
                 <div 

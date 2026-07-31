@@ -17,8 +17,8 @@ export default function DashboardLayout({
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: "dashboard", fill: true },
-    { label: "Orders", href: "/orders/new", icon: "factory", fill: false },
-    { label: "Customers", href: "/customers", icon: "group", fill: false },
+    { label: "Orders", href: "/orders", icon: "list_alt", fill: false },
+    { label: "New Order", href: "/orders/new", icon: "add_circle", fill: false },
     { label: "Settings", href: "/settings", icon: "settings", fill: false },
     { label: "Profile", href: "/profile", icon: "person", fill: false },
   ];
@@ -39,7 +39,7 @@ export default function DashboardLayout({
         </div>
         <main className={cn(
           "flex-1 overflow-y-auto",
-          isFullScreenMobile ? "p-0 md:p-6 lg:p-8" : "pb-24 md:pb-6 p-4 md:p-6 lg:p-8"
+          isFullScreenMobile ? "p-0 md:p-6 lg:p-8" : "pb-24 md:pb-6 p-2 sm:p-4 md:p-6 lg:p-8"
         )}>
           {children}
         </main>

@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCreateCustomer } from '@/hooks/api/use-customers';
-import { useCreateOrder, useGetOrder } from '@/hooks/api/use-orders';
+import { useCreateOrder, useUpdateOrder } from '@/hooks/api/use-orders';
 import { get } from '@/lib/api/axios';
 
 const steps = ['Customer', 'Products', 'Attachments', 'Commercial'];
@@ -24,6 +24,7 @@ export function OrderStepper() {
 
   const { mutateAsync: createCustomerAsync } = useCreateCustomer();
   const { mutateAsync: createOrderAsync } = useCreateOrder();
+  const { mutateAsync: updateOrderAsync } = useUpdateOrder();
 
   const handleResumeDraft = async (draftOrderId: string) => {
     setIsProcessing(true);
@@ -100,12 +101,21 @@ export function OrderStepper() {
     } else if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Final Submit to API (Finalize order state if needed)
-      // Since it's auto-saved, we just show success and redirect
-      setIsSuccess(true);
-      setTimeout(() => {
-         router.push('/');
-      }, 2000);
+      // Final Submit to API (Finalize order state)
+      setIsProcessing(true);
+      try {
+        if (orderId) {
+           await updateOrderAsync({ id: orderId, data: { ...stepData, isSubmit: true } });
+        }
+        setIsSuccess(true);
+        setTimeout(() => {
+           router.push('/');
+        }, 2000);
+      } catch (e) {
+        toast.error("Failed to submit order");
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -172,12 +182,12 @@ export function OrderStepper() {
         )}
         
         {isSuccess ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center animate-in zoom-in duration-300">
+          <div className="flex-1 w-full px-4 flex flex-col items-center justify-center text-center animate-in zoom-in duration-300">
             <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
               <CheckCircle2 className="w-12 h-12" />
             </div>
             <h2 className="text-2xl font-bold mb-2">Order Captured!</h2>
-            <p className="text-muted-foreground mb-8 max-w-sm">The order has been successfully saved as a draft. You can process it from the dashboard.</p>
+            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">The order has been successfully saved. You can process it further from the dashboard.</p>
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
             <p className="text-xs text-muted-foreground mt-2">Redirecting to Dashboard...</p>
           </div>

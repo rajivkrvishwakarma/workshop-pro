@@ -17,10 +17,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const session = await getSession();
 
     if (!refreshToken || !session) {
-      return NextResponse.json<ApiResponse>(
+      const response = NextResponse.json<ApiResponse>(
         { success: false, error: { message: 'No active session' } },
         { status: 401 }
       );
+      response.cookies.delete('accessToken');
+      response.cookies.delete('refreshToken');
+      response.cookies.delete('ws_session');
+      return response;
     }
 
     // Call auth service refresh endpoint
@@ -33,17 +37,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       },
     });
 
-    const authData = await authResponse.json() as {
-      success: boolean;
-      data?: { accessToken: string };
-      error?: { message: string };
-    };
+    let authData: any = {};
+    const contentType = authResponse.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      authData = await authResponse.json();
+    } else {
+      const text = await authResponse.text();
+      authData = { success: false, error: { message: text || 'Unknown error from auth service' } };
+    }
 
     if (!authResponse.ok || !authData.success || !authData.data) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: { message: 'Session refresh failed' } },
-        { status: 401 }
+      const response = NextResponse.json<ApiResponse>(
+        { success: false, error: { message: authData.error?.message ?? 'Session refresh failed' } },
+        { status: authResponse.status === 429 ? 429 : 401 }
       );
+      response.cookies.delete('accessToken');
+      response.cookies.delete('refreshToken');
+      response.cookies.delete('ws_session');
+      return response;
     }
 
     // Update session with new access token
@@ -54,15 +65,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
     await createSession(updatedSession);
 
-    return NextResponse.json<ApiResponse>(
+    const response = NextResponse.json<ApiResponse>(
       { success: true, message: 'Session refreshed' },
       { status: 200 }
     );
+
+    // Set new accessToken cookie for proxy.ts
+    response.cookies.set('accessToken', authData.data.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+
+    return response;
   } catch (error) {
     console.error('[BFF] Refresh error:', error);
-    return NextResponse.json<ApiResponse>(
+    const response = NextResponse.json<ApiResponse>(
       { success: false, error: { message: 'Internal server error' } },
       { status: 500 }
     );
+    response.cookies.delete('accessToken');
+    response.cookies.delete('refreshToken');
+    response.cookies.delete('ws_session');
+    return response;
   }
 }

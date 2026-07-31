@@ -35,3 +35,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
 }
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get('search') || undefined;
+    const statusId = searchParams.get('statusId') || undefined;
+    const customerId = searchParams.get('customerId') || undefined;
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
+
+    const orders = await OrderRepository.findAll({ search, statusId, customerId, limit, offset });
+    return NextResponse.json({ success: true, data: orders });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}

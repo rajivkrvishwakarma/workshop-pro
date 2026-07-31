@@ -21,14 +21,24 @@ const updateOrderSchema = z.object({
     }).optional(),
     design: z.any().optional(), // allow unstructured JSON for design data
   })).optional(),
+  attachments: z.array(z.object({
+    url: z.string(),
+    type: z.string().optional(),
+    isVoiceNote: z.boolean().optional(),
+    size: z.number().optional()
+  })).optional(),
+  isSubmit: z.boolean().optional(),
 });
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } | Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    // Safely extract id for both Next 14 and 15
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
+    
     const order = await OrderRepository.findById(id);
     if (!order) {
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
@@ -39,18 +49,44 @@ export async function GET(
   }
 }
 
+import { db } from '@/lib/db';
+import { statuses } from '@/drizzle/schema';
+import { ilike } from 'drizzle-orm';
+
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } | Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
+    
+    if (!id || id === 'undefined') {
+      return NextResponse.json({ success: false, error: 'Invalid order ID' }, { status: 400 });
+    }
+    
     const body = await req.json();
     const data = updateOrderSchema.parse(body);
     
-    const { items, ...orderData } = data;
+    const { items, attachments, isSubmit, ...orderData } = data as any;
     
-    const order = await OrderRepository.update(id, orderData, items as any[]);
+    if (isSubmit) {
+      // Find the "New" or "Pending" status
+      const status = await db.query.statuses.findFirst({
+        where: ilike(statuses.name, '%new%'),
+      });
+      if (status) {
+        orderData.statusId = status.id;
+      } else {
+        // Fallback: pick the first status if "new" doesn't exist
+        const anyStatus = await db.query.statuses.findFirst({
+          orderBy: (s, { asc }) => [asc(s.sequence)],
+        });
+        if (anyStatus) orderData.statusId = anyStatus.id;
+      }
+    }
+    
+    const order = await OrderRepository.update(id, orderData, items as any[], attachments as any[]);
 
     return NextResponse.json({ success: true, data: order });
   } catch (error: any) {

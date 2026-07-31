@@ -27,8 +27,8 @@ export const authService = {
    * Fetch current authenticated user from the auth service via BFF.
    */
   async getMe(): Promise<AuthUser> {
-    const response = await get<{ user: AuthUser }>('/auth/me');
-    if (!response.data?.user) throw new Error('Failed to fetch user');
-    return response.data.user;
+    const response = await get<AuthUser>('/auth/me');
+    if (!response.data) throw new Error('Failed to fetch user');
+    return response.data;
   },
 };

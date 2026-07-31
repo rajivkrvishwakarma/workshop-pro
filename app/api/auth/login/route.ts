@@ -24,24 +24,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       body: JSON.stringify(body),
     });
 
-    const authData = await authResponse.json() as {
-      success: boolean;
-      data?: {
-        accessToken: string;
-        user: {
-          id: string;
-          email: string;
-          firstName?: string;
-          lastName?: string;
-        };
-      };
-      error?: { message: string };
-    };
+    let authData: any = {};
+    const contentType = authResponse.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      authData = await authResponse.json();
+    } else {
+      const text = await authResponse.text();
+      authData = { success: false, error: { message: text || 'Unknown error from auth service' } };
+    }
 
     if (!authResponse.ok || !authData.success || !authData.data) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: authData.error?.message ?? 'Login failed' } },
-        { status: authResponse.status }
+        { status: authResponse.status === 429 ? 429 : (authResponse.status >= 400 ? authResponse.status : 401) }
       );
     }
 
@@ -72,6 +67,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (setCookieHeader) {
       response.headers.set('set-cookie', setCookieHeader);
     }
+
+    // Set accessToken cookie for proxy.ts
+    response.cookies.set('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
 
     return response;
   } catch (error) {
