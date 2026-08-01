@@ -9,8 +9,14 @@ import { pgTable, uuid, varchar, boolean, timestamp } from 'drizzle-orm/pg-core'
 export const workshopUsers = pgTable('workshop_users', {
   id: uuid('id').primaryKey().defaultRandom(),
 
-  // Links to users.id in the authorization-service database
-  authUserId: uuid('auth_user_id').unique().notNull(),
+  // Links to users.id in the authorization-service database (Legacy)
+  authUserId: uuid('auth_user_id').unique(),
+
+  // Local Auth Fields
+  email: varchar('email', { length: 255 }).unique().notNull(),
+  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  firstName: varchar('first_name', { length: 100 }),
+  lastName: varchar('last_name', { length: 100 }),
 
   employeeCode: varchar('employee_code', { length: 50 }).unique(),
   department: varchar('department', { length: 100 }),

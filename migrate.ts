@@ -3,6 +3,9 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: '.env' });
+}
 
 async function run() {
   const pool = new Pool({

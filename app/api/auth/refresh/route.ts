@@ -1,77 +1,64 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { createSession, getSession } from '@/lib/auth/session';
-import type { SessionPayload } from '@/types/auth';
 import type { ApiResponse } from '@/types/api';
+import { jwtVerify, SignJWT } from 'jose';
+import { v4 as uuidv4 } from 'uuid';
 
-const AUTH_API_URL = process.env.AUTH_API_URL;
+const secretStr = process.env.JWT_SECRET;
+const secret = secretStr ? new TextEncoder().encode(secretStr) : undefined;
 
 /**
- * BFF Proxy: POST /api/auth/refresh
+ * Local POST /api/auth/refresh
  *
- * Calls the auth service refresh endpoint using the refreshToken cookie,
- * then updates the workshop session cookie with a fresh access token.
+ * Refreshes the local accessToken if valid.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const refreshToken = request.cookies.get('refreshToken')?.value;
-    const session = await getSession();
+    if (!secret) throw new Error('JWT_SECRET is not configured');
 
-    if (!refreshToken || !session) {
-      const response = NextResponse.json<ApiResponse>(
+    const token = request.cookies.get('accessToken')?.value;
+
+    if (!token) {
+      return NextResponse.json<ApiResponse>(
         { success: false, error: { message: 'No active session' } },
         { status: 401 }
       );
-      response.cookies.delete('accessToken');
-      response.cookies.delete('refreshToken');
-      response.cookies.delete('ws_session');
-      return response;
     }
 
-    // Call auth service refresh endpoint
-    const authResponse = await fetch(`${AUTH_API_URL}/api/v1/auth/refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.sessionId}`,
-        Cookie: `refreshToken=${refreshToken}`,
-      },
-    });
-
-    let authData: any = {};
-    const contentType = authResponse.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      authData = await authResponse.json();
-    } else {
-      const text = await authResponse.text();
-      authData = { success: false, error: { message: text || 'Unknown error from auth service' } };
-    }
-
-    if (!authResponse.ok || !authData.success || !authData.data) {
+    let payload;
+    try {
+      // For a real refresh, you might want to allow expired tokens here 
+      // if you check a database session, but since we are purely stateless JWT here:
+      const verified = await jwtVerify(token, secret);
+      payload = verified.payload;
+    } catch {
       const response = NextResponse.json<ApiResponse>(
-        { success: false, error: { message: authData.error?.message ?? 'Session refresh failed' } },
-        { status: authResponse.status === 429 ? 429 : 401 }
+        { success: false, error: { message: 'Invalid or expired token' } },
+        { status: 401 }
       );
       response.cookies.delete('accessToken');
-      response.cookies.delete('refreshToken');
-      response.cookies.delete('ws_session');
       return response;
     }
 
-    // Update session with new access token
-    const updatedSession: SessionPayload = {
-      ...session,
-      sessionId: authData.data.accessToken,
-      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    // Issue a new token
+    const newPayload = {
+      sub: payload.sub,
+      email: payload.email,
     };
-    await createSession(updatedSession);
+
+    const newAccessToken = await new SignJWT(newPayload)
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('7d')
+      .setJti(uuidv4())
+      .sign(secret);
 
     const response = NextResponse.json<ApiResponse>(
       { success: true, message: 'Session refreshed' },
       { status: 200 }
     );
 
-    // Set new accessToken cookie for proxy.ts
-    response.cookies.set('accessToken', authData.data.accessToken, {
+    // Set new accessToken cookie
+    response.cookies.set('accessToken', newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -81,14 +68,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     return response;
   } catch (error) {
-    console.error('[BFF] Refresh error:', error);
+    console.error('[AUTH] Refresh error:', error);
     const response = NextResponse.json<ApiResponse>(
       { success: false, error: { message: 'Internal server error' } },
       { status: 500 }
     );
     response.cookies.delete('accessToken');
-    response.cookies.delete('refreshToken');
-    response.cookies.delete('ws_session');
     return response;
   }
 }

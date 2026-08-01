@@ -1,72 +1,89 @@
+// Force Next.js recompile
 import { type NextRequest, NextResponse } from 'next/server';
 import { createSession } from '@/lib/auth/session';
 import type { SessionPayload } from '@/types/auth';
 import type { ApiResponse } from '@/types/api';
+import bcrypt from 'bcryptjs';
+import { db } from '@/lib/db';
+import { workshopUsers } from '@/drizzle/schema/workshop-users';
+import { workshopUserRoles } from '@/drizzle/schema/roles';
+import { eq } from 'drizzle-orm';
+import { SignJWT } from 'jose';
+import { v4 as uuidv4 } from 'uuid';
 
-const AUTH_API_URL = process.env.AUTH_API_URL;
+const secretStr = process.env.JWT_SECRET;
+const secret = secretStr ? new TextEncoder().encode(secretStr) : undefined;
 
-/**
- * BFF Proxy: POST /api/auth/login
- *
- * 1. Forwards credentials to the authorization-service.
- * 2. On success: creates an httpOnly session cookie and returns user data.
- * 3. The refreshToken from the auth service remains in its own httpOnly cookie
- *    via the Set-Cookie header that gets forwarded to the browser.
- */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const body = await request.json() as { email: string; password: string };
-
-    // Forward login request to auth service
-    const authResponse = await fetch(`${AUTH_API_URL}/api/v1/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    let authData: any = {};
-    const contentType = authResponse.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      authData = await authResponse.json();
-    } else {
-      const text = await authResponse.text();
-      authData = { success: false, error: { message: text || 'Unknown error from auth service' } };
+    if (!secret) {
+      throw new Error('JWT_SECRET is not configured');
     }
 
-    if (!authResponse.ok || !authData.success || !authData.data) {
+    const { email, password } = await request.json() as { email?: string; password?: string };
+
+    if (!email || !password) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: { message: authData.error?.message ?? 'Login failed' } },
-        { status: authResponse.status === 429 ? 429 : (authResponse.status >= 400 ? authResponse.status : 401) }
+        { success: false, error: { message: 'Email and password are required' } },
+        { status: 400 }
       );
     }
 
-    const { accessToken, user } = authData.data;
+    // 1. Find user by email
+    const [user] = await db.select().from(workshopUsers).where(eq(workshopUsers.email, email)).limit(1);
 
-    // Build session payload (in production: add roles/permissions from a db lookup)
-    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
-    const sessionPayload: SessionPayload = {
-      userId: user.id,
-      sessionId: accessToken, // We use the access token as session identifier
+    if (!user) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: 'Invalid credentials' } },
+        { status: 401 }
+      );
+    }
+
+    // 2. Verify password
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    if (!isValidPassword) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: 'Invalid credentials' } },
+        { status: 401 }
+      );
+    }
+
+    // 3. Check if active
+    if (!user.isActive) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: 'Account is disabled' } },
+        { status: 403 }
+      );
+    }
+
+    // 4. Generate JWT payload
+    const tokenPayload = {
+      sub: user.id, // Subject is the user ID
       email: user.email,
-      roles: [], // TODO: populate from workshop_user_roles on next phase
-      permissions: [],
-      expiresAt,
     };
 
-    // Create httpOnly session cookie
-    await createSession(sessionPayload);
+    // 5. Sign JWT
+    const accessToken = await new SignJWT(tokenPayload)
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('7d')
+      .setJti(uuidv4())
+      .sign(secret);
 
-    // Forward the refreshToken cookie from the auth service to the browser
-    const response = NextResponse.json<ApiResponse<{ user: typeof user }>>(
-      { success: true, data: { user } },
+    // Build user response object
+    const userResponse = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      roles: [], // To be populated properly via /me endpoint or here
+      permissions: [],
+    };
+
+    const response = NextResponse.json<ApiResponse<{ user: typeof userResponse }>>(
+      { success: true, data: { user: userResponse } },
       { status: 200 }
     );
-
-    // Forward Set-Cookie header from auth service (carries the refreshToken)
-    const setCookieHeader = authResponse.headers.get('set-cookie');
-    if (setCookieHeader) {
-      response.headers.set('set-cookie', setCookieHeader);
-    }
 
     // Set accessToken cookie for proxy.ts
     response.cookies.set('accessToken', accessToken, {
@@ -79,7 +96,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     return response;
   } catch (error) {
-    console.error('[BFF] Login error:', error);
+    console.error('[AUTH] Login error:', error);
     return NextResponse.json<ApiResponse>(
       { success: false, error: { message: 'Internal server error' } },
       { status: 500 }
