@@ -3,8 +3,9 @@ import { db } from '@/lib/db';
 import { productMasters } from '@/drizzle/schema/product-masters';
 import { eq } from 'drizzle-orm';
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params;
     const { category, name, description } = await req.json();
 
     if (!category) {
@@ -16,7 +17,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       name: name || category,
       description,
       updatedAt: new Date(),
-    }).where(eq(productMasters.id, params.id)).returning();
+    }).where(eq(productMasters.id, resolvedParams.id)).returning();
 
     if (!updatedMaster) {
       return NextResponse.json({ success: false, error: 'Category not found' }, { status: 404 });
@@ -31,10 +32,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params;
     const [deletedMaster] = await db.delete(productMasters)
-      .where(eq(productMasters.id, params.id))
+      .where(eq(productMasters.id, resolvedParams.id))
       .returning();
 
     if (!deletedMaster) {

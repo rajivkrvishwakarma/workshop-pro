@@ -3,9 +3,10 @@ import { db } from '@/lib/db';
 import { materials } from '@/drizzle/schema/materials';
 import { eq } from 'drizzle-orm';
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     const { name, description } = await req.json();
 
     if (!name) {
@@ -23,9 +24,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     await db.delete(materials).where(eq(materials.id, id));
     return NextResponse.json({ success: true });
   } catch (error: any) {

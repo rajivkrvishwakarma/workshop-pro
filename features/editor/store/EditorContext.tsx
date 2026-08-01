@@ -128,19 +128,19 @@ export function EditorProvider({ children, initialElements = [] }: { children: R
   return <EditorContext.Provider value={storeRef.current}>{children}</EditorContext.Provider>;
 }
 
-export function useEditorContext<T>(selector: (state: EditorState) => T): T {
+export function useEditorContext<T = EditorState>(selector?: (state: EditorState) => T): T {
   const store = useContext(EditorContext);
   if (!store) throw new Error('Missing EditorContext.Provider in the tree');
-  return useStore(store, selector);
+  return selector ? useStore(store, selector) : useStore(store) as any as T;
 }
 
 // Temporary compatibility layer for existing code that hasn't been migrated yet
 export const useEditorStore = Object.assign(
-  function useEditorStoreCompat<T>(selector: (state: EditorState) => T): T {
+  function useEditorStoreCompat<T = EditorState>(selector?: (state: EditorState) => T): T {
     try {
       const store = useContext(EditorContext);
       if (!store) throw new Error('not in context');
-      return useStore(store, selector);
+      return selector ? useStore(store, selector) : useStore(store) as any as T;
     } catch (e) {
       // Fallback if not inside provider - shouldn't happen after we wrap it!
       throw new Error('useEditorStore must be used within EditorProvider now');

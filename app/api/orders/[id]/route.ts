@@ -32,7 +32,7 @@ const updateOrderSchema = z.object({
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } | Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Safely extract id for both Next 14 and 15
@@ -55,7 +55,7 @@ import { ilike } from 'drizzle-orm';
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } | Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const resolvedParams = await params;
