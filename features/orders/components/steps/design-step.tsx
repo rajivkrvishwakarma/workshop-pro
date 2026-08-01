@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { AnnotationEditor } from '@/features/editor/components/AnnotationEditor';
-import { useEditorStore } from '@/features/editor/store/useEditorStore';
+import { useEditorContext } from '@/features/editor/store/EditorContext';
 import { useGetMaterials, useGetProducts } from '@/hooks/api/use-masters';
 import { canShowKabjaAndHolfass } from '@/lib/constants/product-rules';
 import { MobileHeader } from '@/components/layout/mobile-header';
@@ -49,6 +49,7 @@ export function DesignStep({ onNext, onBack, onChange, defaultData, productData 
     right: { top: '', middle: '', bottom: '' }
   });
   const [kabja, setKabja] = useState<'none' | 'left' | 'right'>(defaultData?.kabja || 'none');
+  const { elements } = useEditorContext();
 
   const onChangeRef = useRef(onChange);
   useEffect(() => {
@@ -57,27 +58,15 @@ export function DesignStep({ onNext, onBack, onChange, defaultData, productData 
 
   useEffect(() => {
     if (!onChangeRef.current) return;
-    const elements = useEditorStore.getState().elements;
     const timer = setTimeout(() => {
       if (onChangeRef.current) {
         onChangeRef.current({ design: { width, height, unit, material, templateId: category, holfass, kabja, hasVentilator, ventilatorImageUrl, elements } });
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [width, height, unit, material, holfass, kabja, hasVentilator, ventilatorImageUrl, category]);
-
-  // Subscribe to canvas elements changes
-  useEffect(() => {
-    if (!onChangeRef.current) return;
-    return useEditorStore.subscribe((state: any, prevState: any) => {
-      if (state.elements !== prevState.elements && onChangeRef.current) {
-        onChangeRef.current({ design: { width, height, unit, material, templateId: category, holfass, kabja, hasVentilator, ventilatorImageUrl, elements: state.elements } });
-      }
-    });
-  }, [width, height, unit, material, holfass, kabja, hasVentilator, ventilatorImageUrl, category]);
+  }, [width, height, unit, material, holfass, kabja, hasVentilator, ventilatorImageUrl, category, elements]);
 
   const handleProceed = () => {
-    const elements = useEditorStore.getState().elements;
     onNext({ design: { width, height, unit, material, templateId: category, holfass, kabja, hasVentilator, ventilatorImageUrl, elements } });
   };
 

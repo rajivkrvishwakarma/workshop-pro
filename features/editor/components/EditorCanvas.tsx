@@ -169,7 +169,7 @@ function BoundsLayer({ canvasWidth, canvasHeight, unit = 'inch', imageUrl, holfa
 }
 
 export function EditorCanvas({ imageUrl, canvasWidth, canvasHeight, unit, holfass, kabja, hasVentilator, ventilatorImageUrl }: EditorCanvasProps) {
-  const { scale, position, setScale, setPosition, tool, strokeColor, strokeWidth, addElement, updateElement, elements, setSelectedIds, setStageRef } = useEditorStore((state) => state);
+  const { scale, position, setScale, setPosition, tool, strokeColor, strokeWidth, addElement, updateElement, elements, getElements, setSelectedIds, setStageRef, commitHistory } = useEditorStore((state) => state);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -289,7 +289,7 @@ export function EditorCanvas({ imageUrl, canvasWidth, canvasHeight, unit, holfas
     const pos = getRelativePointerPosition(stage);
     if (!pos) return;
 
-    const el = useEditorStore.getState().elements.find((el) => el.id === currentShapeId.current);
+    const el = getElements().find((el) => el.id === currentShapeId.current);
     if (!el) return;
 
     if (tool === 'pen') {
@@ -307,7 +307,7 @@ export function EditorCanvas({ imageUrl, canvasWidth, canvasHeight, unit, holfas
 
   const handlePointerUp = () => {
     if (isDrawing) {
-      useEditorStore.getState().commitHistory();
+      commitHistory();
     }
     setIsDrawing(false);
     currentShapeId.current = null;
@@ -320,7 +320,7 @@ export function EditorCanvas({ imageUrl, canvasWidth, canvasHeight, unit, holfas
     if (!pos) return;
 
     const clickedId = e.target.id();
-    const existingElement = useEditorStore.getState().elements.find(el => el.id === clickedId && el.type === 'text');
+    const existingElement = getElements().find(el => el.id === clickedId && el.type === 'text');
 
     if (existingElement) {
       setEditingText({
@@ -353,7 +353,7 @@ export function EditorCanvas({ imageUrl, canvasWidth, canvasHeight, unit, holfas
           strokeWidth: 1,
         } as any);
       }
-      useEditorStore.getState().commitHistory();
+      commitHistory();
     }
     setEditingText(null);
   };

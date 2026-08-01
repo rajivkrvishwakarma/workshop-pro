@@ -5,7 +5,7 @@ import { EditorElement } from '../types';
 import Konva from 'konva';
 
 export function DrawingLayer() {
-  const { elements, selectedIds, setSelectedIds, updateElement, tool } = useEditorStore();
+  const { elements, selectedIds, setSelectedIds, updateElement, tool, deleteElement, commitHistory } = useEditorStore();
   const trRef = useRef<Konva.Transformer>(null);
 
   // Attach transformer to selected nodes
@@ -27,8 +27,8 @@ export function DrawingLayer() {
 
   const handleSelect = (e: any, id: string) => {
     if (tool === 'eraser') {
-      useEditorStore.getState().deleteElement(id);
-      useEditorStore.getState().commitHistory();
+      deleteElement(id);
+      commitHistory();
       return;
     }
     if (tool !== 'select') return;
@@ -55,7 +55,7 @@ export function DrawingLayer() {
       onTap: (e: any) => handleSelect(e, el.id),
       onDragEnd: (e: any) => {
         updateElement(el.id, { x: e.target.x(), y: e.target.y() });
-        useEditorStore.getState().commitHistory();
+        commitHistory();
       },
       onTransformEnd: (e: any) => {
         const node = e.target;
@@ -68,7 +68,7 @@ export function DrawingLayer() {
         });
         node.scaleX(1);
         node.scaleY(1);
-        useEditorStore.getState().commitHistory();
+        commitHistory();
       }
     };
 
