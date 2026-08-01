@@ -7,7 +7,7 @@ import type { AuthUser } from './auth';
  */
 export function hasPermission(user: AuthUser | null, permission: PermissionKey): boolean {
   if (!user) return false;
-  return user.permissions.includes(permission);
+  return (user.permissions || []).includes(permission);
 }
 
 /**
@@ -15,7 +15,7 @@ export function hasPermission(user: AuthUser | null, permission: PermissionKey):
  */
 export function hasAnyPermission(user: AuthUser | null, permissions: PermissionKey[]): boolean {
   if (!user) return false;
-  return permissions.some((p) => user.permissions.includes(p));
+  return permissions.some((p) => (user.permissions || []).includes(p));
 }
 
 /**
@@ -23,7 +23,7 @@ export function hasAnyPermission(user: AuthUser | null, permissions: PermissionK
  */
 export function hasAllPermissions(user: AuthUser | null, permissions: PermissionKey[]): boolean {
   if (!user) return false;
-  return permissions.every((p) => user.permissions.includes(p));
+  return permissions.every((p) => (user.permissions || []).includes(p));
 }
 
 /**
@@ -31,5 +31,5 @@ export function hasAllPermissions(user: AuthUser | null, permissions: Permission
  */
 export function hasRole(user: AuthUser | null, role: WorkshopRole): boolean {
   if (!user) return false;
-  return user.roles.includes(role);
+  return (user.roles || []).includes(role);
 }
