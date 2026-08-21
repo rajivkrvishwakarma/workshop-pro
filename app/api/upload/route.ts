@@ -12,6 +12,9 @@ export async function POST(req: NextRequest) {
       folder = 'workshop/attachments';
     }
 
+    // Optional resource_type (Cloudinary uses 'video' for audio files)
+    const resourceType = (formData.get('resource_type') as string) || 'auto';
+
     if (!files || files.length === 0) {
       return NextResponse.json({ success: false, error: 'No files provided' }, { status: 400 });
     }
@@ -24,7 +27,7 @@ export async function POST(req: NextRequest) {
       const buffer = Buffer.from(arrayBuffer);
 
       // Upload to Cloudinary
-      const url = await uploadToCloudinary(buffer, file.type, folder);
+      const url = await uploadToCloudinary(buffer, file.type, folder, resourceType);
       uploadedUrls.push({
         url,
         type: file.type,

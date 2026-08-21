@@ -194,16 +194,26 @@ export function OrderStepper({ initialOrderId }: OrderStepperProps = {}) {
         )}
         
         {isSuccess ? (
-          <div className="flex-1 w-full px-4 flex flex-col items-center justify-center text-center animate-in zoom-in duration-300">
-            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
-              <CheckCircle2 className="w-12 h-12" />
+          <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center text-center px-8 animate-in fade-in duration-500 md:relative md:inset-auto md:flex-1 md:w-full md:px-4">
+            {/* Animated success icon */}
+            <div className="relative mb-8">
+              <div className="absolute inset-0 rounded-full bg-green-400/20 animate-ping" />
+              <div className="relative w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-xl shadow-green-500/30">
+                <CheckCircle2 className="w-14 h-14 text-white" />
+              </div>
             </div>
-            <h2 className="text-2xl font-bold mb-2">Order Captured!</h2>
-            <p className="text-muted-foreground mb-8 w-11/12 max-w-md mx-auto text-sm md:text-base">
-              The order has been successfully saved. You can process it further from the dashboard.
+
+            <h2 className="text-3xl font-black text-foreground mb-3 tracking-tight">Order Captured!</h2>
+            <p className="text-muted-foreground text-base max-w-xs mx-auto leading-relaxed">
+              The order has been successfully saved. You can track it from the dashboard.
             </p>
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            <p className="text-xs text-muted-foreground mt-2">Redirecting to Dashboard...</p>
+
+            <div className="mt-10 flex flex-col items-center gap-3 w-full max-w-xs">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span>Redirecting to Dashboard...</span>
+              </div>
+            </div>
           </div>
         ) : (
           <>

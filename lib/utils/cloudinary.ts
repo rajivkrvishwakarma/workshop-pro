@@ -1,6 +1,11 @@
 import crypto from 'crypto';
 
-export async function uploadToCloudinary(fileBuffer: Buffer, mimeType: string, folder: string = 'workshop'): Promise<string> {
+export async function uploadToCloudinary(
+  fileBuffer: Buffer,
+  mimeType: string,
+  folder: string = 'workshop',
+  resourceType: string = 'auto'
+): Promise<string> {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
@@ -23,7 +28,9 @@ export async function uploadToCloudinary(fileBuffer: Buffer, mimeType: string, f
   formData.append('signature', signature);
   formData.append('folder', folder);
 
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+  // Use resourceType endpoint — 'video' is required for audio files in Cloudinary
+  const uploadResourceType = resourceType || 'auto';
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${uploadResourceType}/upload`, {
     method: 'POST',
     body: formData,
   });
