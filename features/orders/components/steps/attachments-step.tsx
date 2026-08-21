@@ -186,21 +186,29 @@ export function AttachmentsStep({ orderId, onNext, onBack, defaultData }: { orde
         <div className="space-y-6 flex-1 pb-32 md:pb-8">
           <div className="bg-surface-container-low border border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center text-center">
             <div className="flex gap-4 mb-4">
-              {/* Camera button — native label wrapping input for guaranteed camera intent */}
-              <label className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors cursor-pointer">
+              {/* Camera button — absolute transparent overlay for direct tap (forces camera intent) */}
+              <div className="relative w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors cursor-pointer overflow-hidden">
                 <Camera className="w-8 h-8" />
                 <input 
                   type="file" 
                   accept="image/*" 
                   capture="environment" 
-                  className="hidden" 
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
                   onChange={handleCameraCapture} 
                 />
-              </label>
-              <label className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors cursor-pointer">
+              </div>
+              
+              {/* Gallery button */}
+              <div className="relative w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors cursor-pointer overflow-hidden">
                 <ImageIcon className="w-8 h-8" />
-                <input type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
-              </label>
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="image/*" 
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                  onChange={handleFileChange} 
+                />
+              </div>
             </div>
             <h3 className="font-label-lg text-label-lg mb-1 text-on-surface">Capture or Upload Photos</h3>
             <p className="font-body-sm text-body-sm text-on-surface-variant mb-4">Take a picture or select from device</p>
