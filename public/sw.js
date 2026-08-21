@@ -7,6 +7,6 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // A minimal fetch handler is required by some browsers for PWA installation criteria
-  return;
+  // A minimal fetch handler is required by browsers to pass PWA criteria
+  // We leave it empty to just let the browser handle requests normally
 });
