@@ -157,7 +157,8 @@ export function AttachmentsStep({ orderId, onNext, onBack, defaultData }: { orde
             throw new Error(data.error || 'Upload failed');
           }
         }
-      
+      } // end if (filesToUpload.length > 0)
+
       existingAttachments.forEach(a => {
         finalAttachments.push({
           url: a.url,
