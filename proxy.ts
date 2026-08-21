@@ -25,8 +25,19 @@ const SKIP_PATTERNS = [
   /^\/_next\/static/,
   /^\/_next\/image/,
   /^\/public\//,
-  /\.(ico|png|jpg|jpeg|svg|webp|gif|woff|woff2|ttf|otf|css|js|map)$/,
+  // Static file extensions (including .json for manifest)
+  /\.(ico|png|jpg|jpeg|svg|webp|gif|woff|woff2|ttf|otf|css|js|map|json|webmanifest|txt|xml)$/,
 ];
+
+/** PWA and other public static paths that must never be auth-gated */
+const PUBLIC_PATHS = new Set<string>([
+  '/manifest.json',
+  '/manifest.webmanifest',
+  '/sw.js',
+  '/site.webmanifest',
+  '/robots.txt',
+  '/sitemap.xml',
+]);
 
 const secretStr = process.env.JWT_SECRET;
 const secret = secretStr ? new TextEncoder().encode(secretStr) : undefined;
@@ -34,8 +45,11 @@ const secret = secretStr ? new TextEncoder().encode(secretStr) : undefined;
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
-  // Skip static assets
-  if (SKIP_PATTERNS.some((pattern) => pattern.test(pathname))) {
+  // Skip static assets and known public paths
+  if (
+    SKIP_PATTERNS.some((pattern) => pattern.test(pathname)) ||
+    PUBLIC_PATHS.has(pathname)
+  ) {
     return NextResponse.next();
   }
 
