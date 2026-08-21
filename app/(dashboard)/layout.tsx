@@ -18,7 +18,12 @@ export default function DashboardLayout({
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: "dashboard", fill: true },
     { label: "Orders", href: "/orders", icon: "list_alt", fill: false },
-    { label: "New Order", href: "/orders/new", icon: "add_circle", fill: false },
+    {
+      label: "New Order",
+      href: "/orders/new",
+      icon: "add_circle",
+      fill: false,
+    },
     { label: "Settings", href: "/settings", icon: "settings", fill: false },
     { label: "Profile", href: "/profile", icon: "person", fill: false },
   ];
@@ -37,30 +42,45 @@ export default function DashboardLayout({
         <div className={isFullScreenMobile ? "hidden md:block" : "block"}>
           <TopNavbar onMenuClick={() => {}} />
         </div>
-        <main className={cn(
-          "flex-1 overflow-y-auto",
-          isFullScreenMobile ? "p-0 md:p-6 lg:p-8" : "pb-24 md:pb-6 p-2 sm:p-4 md:p-6 lg:p-8"
-        )}>
+        <main
+          className={cn(
+            "flex-1 overflow-y-auto",
+            isFullScreenMobile
+              ? "p-0 md:p-6 lg:p-8"
+              : "pb-24 md:pb-6 p-2 sm:p-4 md:p-6 lg:p-8",
+          )}
+        >
           {children}
         </main>
 
         {/* Mobile Bottom Navigation */}
-        <nav className={cn(
-          "bg-surface fixed bottom-0 left-0 w-full z-50 justify-around items-center px-2 py-3 pb-[env(safe-area-inset-bottom)] border-t border-outline-variant font-label-sm text-label-sm",
-          isFullScreenMobile ? "hidden" : "flex md:hidden"
-        )}>
+        <nav
+          className={cn(
+            "bg-surface fixed bottom-0 left-0 w-full z-50 justify-around items-center px-2 py-1 pb-[env(safe-area-inset-bottom)] border-t border-outline-variant font-label-sm text-label-sm",
+            isFullScreenMobile ? "hidden" : "flex md:hidden",
+          )}
+        >
           {navItems.map((item) => {
-            const isActive = item.href === '/dashboard' 
-              ? pathname === '/dashboard' 
-              : pathname.startsWith(item.href);
-              
+            const isActive =
+              item.href === "/dashboard"
+                ? pathname === "/dashboard"
+                : pathname.startsWith(item.href);
+
             return (
-              <Link href={item.href} key={item.label}>
-                <div className={`flex flex-col items-center justify-center rounded-xl px-3 py-1 active:scale-90 duration-150 ease-in-out w-[72px] ${isActive ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant hover:text-primary'}`}>
-                  <span className="material-symbols-outlined mb-1" style={isActive || item.fill ? { fontVariationSettings: "'FILL' 1" } : undefined}>
+              <Link href={item.href} key={item.label} aria-label={item.label}>
+                <div
+                  className={`flex items-center justify-center rounded-full px-4 py-2 mb-1 active:scale-90 duration-150 ease-in-out ${isActive ? "bg-primary-container text-on-primary-container" : "text-on-surface-variant hover:text-primary hover:bg-surface-variant"}`}
+                >
+                  <span
+                    className="material-symbols-outlined text-[28px] "
+                    style={
+                      isActive || item.fill
+                        ? { fontVariationSettings: "'FILL' 1" }
+                        : undefined
+                    }
+                  >
                     {item.icon}
                   </span>
-                  <span className="truncate w-full text-center">{item.label}</span>
                 </div>
               </Link>
             );

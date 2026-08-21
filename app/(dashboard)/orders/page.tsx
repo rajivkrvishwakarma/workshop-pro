@@ -142,53 +142,64 @@ export default function OrdersPage() {
             return (
               <div 
                 key={order.id} 
-                className="bg-surface border border-outline-variant rounded-xl p-5 shadow-sm hover:shadow-md hover:border-primary/50 transition-all group flex flex-col"
+                className="bg-gradient-to-br from-background to-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm hover:shadow-md hover:border-primary/40 transition-all group flex flex-col relative overflow-hidden"
               >
-                <div className="flex justify-between items-start mb-4">
+                <div 
+                  className="absolute top-0 left-0 w-1 h-full opacity-70"
+                  style={{ backgroundColor: status.color || '#94a3b8' }}
+                />
+                
+                <div className="flex justify-between items-start mb-3 pl-2">
                   <div>
                     <h3 className="font-semibold text-on-surface group-hover:text-primary transition-colors line-clamp-1">
                       {order.customer?.name || 'Unknown Customer'}
                     </h3>
                     <p className="text-xs text-muted-foreground flex items-center mt-1">
                       <Clock className="w-3 h-3 mr-1" />
-                      {formatDistanceToNow(createdAt, { addSuffix: true })} ({format(createdAt, 'MMM d')})
+                      {formatDistanceToNow(createdAt, { addSuffix: true })} • {format(createdAt, 'MMM d, h:mm a')}
                     </p>
                   </div>
                   <span 
-                    className="px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap"
+                    className="px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider whitespace-nowrap border"
                     style={{ 
-                      backgroundColor: `${status.color || '#94a3b8'}20`, 
-                      color: status.color || '#475569' 
+                      backgroundColor: `${status.color || '#94a3b8'}15`, 
+                      color: status.color || '#475569',
+                      borderColor: `${status.color || '#94a3b8'}30`
                     }}
                   >
                     {status.name}
                   </span>
                 </div>
 
-                <div className="space-y-2 mb-6 flex-1">
+                <div className="space-y-1.5 mb-4 flex-1 pl-2">
                   <div className="flex items-center text-sm text-on-surface-variant">
-                    <Phone className="w-4 h-4 mr-2 text-muted-foreground shrink-0" />
+                    <Phone className="w-3.5 h-3.5 mr-2 text-muted-foreground shrink-0" />
                     <span>{order.customer?.mobile || 'No mobile'}</span>
                   </div>
                   {order.customer?.address && (
                     <div className="flex items-start text-sm text-on-surface-variant">
-                      <MapPin className="w-4 h-4 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                      <span className="line-clamp-2">{order.customer.address}</span>
+                      <MapPin className="w-3.5 h-3.5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                      <span className="line-clamp-1">{order.customer.address}</span>
                     </div>
                   )}
                 </div>
                 
-                <div className="pt-4 border-t border-outline-variant flex items-center justify-between mt-auto">
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Items</span>
-                    <span className="font-semibold text-on-surface">{order.items?.length || 0}</span>
+                <div className="pt-3 border-t border-outline-variant/60 flex items-center justify-between mt-auto pl-2">
+                  <div className="flex flex-col max-w-[60%]">
+                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-0.5">
+                      Items ({order.items?.length || 0})
+                    </span>
+                    <span className="text-xs font-semibold text-on-surface truncate">
+                      {order.items?.length > 0 
+                        ? order.items.slice(0, 2).map((i: any) => i.productType).join(', ') + (order.items.length > 2 ? ' ...' : '')
+                        : 'No items'}
+                    </span>
                   </div>
                   <Button 
                     size="sm"
-                    className="rounded-full px-5"
+                    className="h-8 rounded-full px-4 text-xs font-medium bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
                     onClick={() => router.push(`/orders/${order.id}`)}
                   >
-                    <Eye className="w-4 h-4 mr-2" />
                     View Details
                   </Button>
                 </div>

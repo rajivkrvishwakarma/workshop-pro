@@ -16,7 +16,6 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Workshop Pro",
   description: "Workshop Management System",
-  manifest: "/site.webmanifest",
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
