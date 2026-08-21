@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { NAV_SECTIONS, NavSection, NavItem } from "@/constants/nav";
 import { cn } from "@/lib/utils/cn";
@@ -81,9 +82,12 @@ export function Sidebar() {
   return (
     <div className="flex h-full w-64 flex-col bg-surface border-r border-outline-variant py-4 shadow-sm">
       <div className="mb-8 px-6">
-        <h2 className="text-2xl font-bold tracking-tight text-primary">
-          Workshop Pro
-        </h2>
+        <Link href="/" className="flex items-center gap-3">
+          <Image src="/logo.png" alt="Workshop Pro" width={32} height={32} className="rounded-md object-contain" />
+          <h2 className="text-xl font-bold tracking-tight text-primary">
+            Workshop Pro
+          </h2>
+        </Link>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4">

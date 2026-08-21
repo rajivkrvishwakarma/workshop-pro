@@ -16,7 +16,7 @@ const poolConfig = {
   connectionString: process.env.DATABASE_URL,
   max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000, // Increased to 10s for serverless wake-up
+  connectionTimeoutMillis: 30000, // Increased to 30s for serverless wake-up
 };
 
 // Global singleton to prevent connection leaks during Next.js HMR in development

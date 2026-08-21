@@ -397,6 +397,87 @@ export function EditorCanvas({ imageUrl, canvasWidth, canvasHeight, unit, holfas
     });
   };
 
+  const getDistance = (p1: { x: number; y: number }, p2: { x: number; y: number }) => {
+    return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+  };
+
+  const lastCenter = useRef<{ x: number, y: number } | null>(null);
+  const lastDist = useRef<number>(0);
+
+  const handleTouchMove = (e: KonvaEventObject<TouchEvent>) => {
+    e.evt.preventDefault();
+    const touch1 = e.evt.touches[0];
+    const touch2 = e.evt.touches[1];
+
+    if (touch1 && touch2) {
+      // If we are pinching, stop any drawing in progress
+      if (isDrawing) {
+        setIsDrawing(false);
+        currentShapeId.current = null;
+      }
+
+      const stage = e.target.getStage();
+      if (!stage) return;
+
+      const p1 = { x: touch1.clientX, y: touch1.clientY };
+      const p2 = { x: touch2.clientX, y: touch2.clientY };
+
+      const dist = getDistance(p1, p2);
+      if (!lastDist.current) {
+        lastDist.current = dist;
+      }
+      
+      const center = {
+        x: (p1.x + p2.x) / 2,
+        y: (p1.y + p2.y) / 2,
+      };
+
+      if (!lastCenter.current) {
+        lastCenter.current = center;
+        return;
+      }
+
+      const stageRect = stage.container().getBoundingClientRect();
+      const pointerPosition = {
+        x: center.x - stageRect.left,
+        y: center.y - stageRect.top,
+      };
+
+      const pointTo = {
+        x: (pointerPosition.x - stage.x()) / stage.scaleX(),
+        y: (pointerPosition.y - stage.y()) / stage.scaleY(),
+      };
+
+      const scaleBy = dist / lastDist.current;
+      const newScale = Math.max(0.1, Math.min(stage.scaleX() * scaleBy, 10));
+
+      setScale(newScale);
+
+      const dx = center.x - lastCenter.current.x;
+      const dy = center.y - lastCenter.current.y;
+
+      setPosition({
+        x: pointerPosition.x - pointTo.x * newScale + dx,
+        y: pointerPosition.y - pointTo.y * newScale + dy,
+      });
+
+      lastDist.current = dist;
+      lastCenter.current = center;
+    }
+  };
+
+  const handleTouchEnd = (e: KonvaEventObject<TouchEvent>) => {
+    lastDist.current = 0;
+    lastCenter.current = null;
+    
+    // Also stop drawing if touch ends
+    if (isDrawing) {
+      commitHistory();
+    }
+    setIsDrawing(false);
+    currentShapeId.current = null;
+  };
+
   const isDraggable = tool === 'pan';
 
   const handleDragMove = (e: KonvaEventObject<DragEvent>) => {
@@ -422,8 +503,10 @@ export function EditorCanvas({ imageUrl, canvasWidth, canvasHeight, unit, holfas
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         onDblClick={handleDblClick}
-        style={{ cursor: tool === 'pan' ? (isDraggable ? 'grabbing' : 'grab') : (tool === 'select' ? 'default' : 'crosshair') }}
+        style={{ cursor: tool === 'pan' ? (isDraggable ? 'grabbing' : 'grab') : (tool === 'select' ? 'default' : 'crosshair'), touchAction: 'none' }}
       >
         <BackgroundLayer width={dimensions.width} height={dimensions.height} imageUrl={imageUrl} />
         {canvasWidth !== undefined && canvasHeight !== undefined && (

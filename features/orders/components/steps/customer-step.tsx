@@ -107,11 +107,14 @@ export function CustomerStep({ onNext, onResumeDraft, defaultData }: { onNext: (
               <Input 
                 required
                 type="tel"
-                placeholder="e.g. +91 98765 43210"
+                placeholder="e.g. 9876543210"
+                maxLength={10}
                 className="w-full bg-surface-container-low border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:border-primary focus:ring-primary"
                 value={formData.mobile}
                 onChange={(e) => {
-                  setFormData({ ...formData, mobile: e.target.value });
+                  // Only allow digits and cap at 10 characters
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setFormData({ ...formData, mobile: val });
                   setShowDropdown(true);
                 }}
                 onFocus={() => setShowDropdown(true)}

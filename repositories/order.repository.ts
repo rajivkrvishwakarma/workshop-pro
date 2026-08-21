@@ -2,7 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { orders, orderItems, orderAttachments } from '@/drizzle/schema';
 import type { InferInsertModel } from 'drizzle-orm';
-import { eq, and, notInArray, sql } from 'drizzle-orm';
+import { eq, and, notInArray, sql, gte, lte } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
 type OrderInsert = InferInsertModel<typeof orders>;
@@ -62,12 +62,30 @@ export class OrderRepository {
     search, 
     statusId, 
     customerId,
+    dateFrom,
+    dateTo,
+    advanceMin,
+    advanceMax,
+    rateMin,
+    rateMax,
+    name,
+    mobile,
+    address,
     limit = 50, 
     offset = 0 
   }: { 
     search?: string, 
     statusId?: string, 
     customerId?: string,
+    dateFrom?: string,
+    dateTo?: string,
+    advanceMin?: number,
+    advanceMax?: number,
+    rateMin?: number,
+    rateMax?: number,
+    name?: string,
+    mobile?: string,
+    address?: string,
     limit?: number, 
     offset?: number 
   } = {}) {
@@ -85,7 +103,23 @@ export class OrderRepository {
       conditions.push(eq(orders.customerId, customerId));
     }
 
-    const data = await db.query.orders.findMany({
+    if (dateFrom) {
+      conditions.push(gte(orders.createdAt, new Date(dateFrom)));
+    }
+    
+    if (dateTo) {
+      const toDate = new Date(dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      conditions.push(lte(orders.createdAt, toDate));
+    }
+
+    if (advanceMin !== undefined) conditions.push(gte(orders.advanceAmount, advanceMin));
+    if (advanceMax !== undefined) conditions.push(lte(orders.advanceAmount, advanceMax));
+    
+    if (rateMin !== undefined) conditions.push(gte(orders.estimatedRate, rateMin));
+    if (rateMax !== undefined) conditions.push(lte(orders.estimatedRate, rateMax));
+
+    let data = await db.query.orders.findMany({
       where: conditions.length > 0 ? and(...conditions) : undefined,
       with: {
         customer: true,
@@ -97,15 +131,28 @@ export class OrderRepository {
       offset,
     });
     
-    // Quick and dirty manual search since customer join filtering is tricky with drizzle relational queries
-    // Ideally we would use standard query builder for joins if we need to filter by customer name.
+    // Manual filtering for relation fields
     if (search) {
       const lowerSearch = search.toLowerCase();
-      return data.filter(order => 
+      data = data.filter(order => 
         order.id.toLowerCase().includes(lowerSearch) ||
         (order.customer && order.customer.name.toLowerCase().includes(lowerSearch)) ||
         (order.customer && order.customer.mobile.includes(lowerSearch))
       );
+    }
+
+    if (name) {
+      const lowerName = name.toLowerCase();
+      data = data.filter(order => order.customer?.name.toLowerCase().includes(lowerName));
+    }
+
+    if (mobile) {
+      data = data.filter(order => order.customer?.mobile.includes(mobile));
+    }
+
+    if (address) {
+      const lowerAddress = address.toLowerCase();
+      data = data.filter(order => order.customer?.address?.toLowerCase().includes(lowerAddress));
     }
 
     return data;

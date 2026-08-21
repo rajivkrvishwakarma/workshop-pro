@@ -47,7 +47,11 @@ export function LoginForm() {
       });
 
       toast.success("Login successful");
-      const callbackUrl = searchParams.get("callbackUrl");
+      let callbackUrl = searchParams.get("callbackUrl");
+      
+      if (callbackUrl === "/forgot-password") {
+        callbackUrl = null;
+      }
       
       // Use window.location for hard navigation to ensure cookies are sent properly 
       // or to trigger middleware correctly if needed, but router.push is fine for Next.js App router

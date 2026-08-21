@@ -1,31 +1,85 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGetOrders } from '@/hooks/api/use-orders';
 import { useGetStatuses } from '@/hooks/api/use-statuses';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, Filter, Eye, Clock, Phone, MapPin } from 'lucide-react';
+import { Loader2, Search, Filter, Eye, Clock, Phone, MapPin, X } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils/cn';
 
 export default function OrdersPage() {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
   
-  const debouncedSearch = useDebounce(searchTerm, 500);
+  const [filters, setFilters] = useState({
+    search: '',
+    statusId: '',
+    dateFrom: '',
+    dateTo: '',
+    advanceMin: '',
+    advanceMax: '',
+    rateMin: '',
+    rateMax: '',
+    name: '',
+    mobile: '',
+    address: '',
+  });
+
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [defaultStatusSet, setDefaultStatusSet] = useState(false);
+
+  const debouncedSearch = useDebounce(filters.search, 500);
+
+  const activeFilters = Object.fromEntries(
+    Object.entries(filters).filter(([_, v]) => v !== '')
+  );
 
   const { data: ordersData, isLoading: isLoadingOrders } = useGetOrders({
+    ...activeFilters,
     search: debouncedSearch || undefined,
-    statusId: statusFilter || undefined,
   });
 
   const { data: statusesData } = useGetStatuses();
   const orders = ordersData || [];
   const statuses = statusesData?.data || [];
+
+  // Set default status to "New" once statuses are loaded
+  useEffect(() => {
+    if (!defaultStatusSet && statuses.length > 0) {
+      const newStatus = statuses.find((s: any) => s.name.toLowerCase() === 'new');
+      if (newStatus) {
+        setFilters(prev => ({ ...prev, statusId: newStatus.id }));
+      }
+      // Even if not found, we mark as set to avoid infinite checks
+      setDefaultStatusSet(true);
+    }
+  }, [statuses, defaultStatusSet]);
+
+  const updateFilter = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      search: '',
+      statusId: '',
+      dateFrom: '',
+      dateTo: '',
+      advanceMin: '',
+      advanceMax: '',
+      rateMin: '',
+      rateMax: '',
+      name: '',
+      mobile: '',
+      address: '',
+    });
+  };
+
+  const hasActiveFilters = Object.values(filters).some(v => v !== '');
+  const hasAdvancedFilters = Object.entries(filters).some(([k, v]) => k !== 'search' && v !== '');
 
   return (
     <div className="flex flex-col h-full bg-background md:bg-transparent animate-in fade-in duration-300">
@@ -40,26 +94,20 @@ export default function OrdersPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
               placeholder="Search customer or mobile..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 bg-surface-container-low border-outline-variant focus:border-primary focus:ring-primary w-full"
+              value={filters.search}
+              onChange={(e) => updateFilter('search', e.target.value)}
+              className="pl-9 bg-surface-container-low border-outline-variant focus:border-primary focus:ring-primary w-full h-10 rounded-md"
             />
           </div>
           
-          <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none bg-surface-container-low border border-outline-variant text-sm rounded-md px-4 py-2 pr-8 focus:outline-none focus:ring-1 focus:ring-primary h-10 w-32 cursor-pointer text-on-surface"
-            >
-              <option value="">All Statuses</option>
-              <option value="draft">Draft (Unsaved)</option>
-              {statuses.map((s: any) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          </div>
+          <Button
+            variant="outline"
+            className={cn("h-10 px-4 flex items-center gap-2", hasAdvancedFilters ? "bg-primary/10 border-primary text-primary" : "")}
+            onClick={() => setIsFiltersOpen(true)}
+          >
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filters</span>
+          </Button>
         </div>
       </div>
 
@@ -74,14 +122,11 @@ export default function OrdersPage() {
           </div>
           <h3 className="text-lg font-semibold text-on-surface mb-2">No orders found</h3>
           <p className="text-muted-foreground max-w-full md:max-w-sm px-4">We couldn't find any orders matching your current filters. Try adjusting your search.</p>
-          {(searchTerm || statusFilter) && (
+          {hasActiveFilters && (
             <Button 
               variant="outline" 
               className="mt-6"
-              onClick={() => {
-                setSearchTerm('');
-                setStatusFilter('');
-              }}
+              onClick={clearFilters}
             >
               Clear Filters
             </Button>
@@ -92,6 +137,7 @@ export default function OrdersPage() {
           {orders.map((order: any) => {
             const isDraft = !order.statusId;
             const status = isDraft ? { name: 'Draft', color: '#f59e0b' } : order.status;
+            const createdAt = new Date(order.createdAt);
             
             return (
               <div 
@@ -105,7 +151,7 @@ export default function OrdersPage() {
                     </h3>
                     <p className="text-xs text-muted-foreground flex items-center mt-1">
                       <Clock className="w-3 h-3 mr-1" />
-                      {format(new Date(order.createdAt), 'MMM d, yyyy h:mm a')}
+                      {formatDistanceToNow(createdAt, { addSuffix: true })} ({format(createdAt, 'MMM d')})
                     </p>
                   </div>
                   <span 
@@ -151,6 +197,92 @@ export default function OrdersPage() {
           })}
         </div>
       )}
+
+      {/* Advanced Filters Drawer */}
+      <div 
+        className={cn(
+          "fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm transition-opacity duration-300", 
+          isFiltersOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => setIsFiltersOpen(false)}
+      />
+      
+      <div 
+        className={cn(
+          "fixed inset-y-0 right-0 z-[100] h-full w-full sm:max-w-sm bg-surface shadow-2xl transition-transform duration-300 border-l border-outline-variant flex flex-col", 
+          isFiltersOpen ? "translate-x-0" : "translate-x-full"
+        )}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant bg-surface-container-lowest shrink-0">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Filter className="w-5 h-5 text-primary" />
+            Advanced Filters
+          </h2>
+          <button 
+            onClick={() => setIsFiltersOpen(false)}
+            className="p-2 hover:bg-surface-variant rounded-full transition-colors text-muted-foreground"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="space-y-3">
+            <label className="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Status</label>
+            <select
+              value={filters.statusId}
+              onChange={(e) => updateFilter('statusId', e.target.value)}
+              className="w-full appearance-none bg-surface-container-low border border-outline-variant rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+            >
+              <option value="">All Statuses</option>
+              <option value="draft">Draft (Unsaved)</option>
+              {statuses.map((s: any) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Date Range</label>
+            <div className="grid grid-cols-2 gap-3">
+              <Input type="date" value={filters.dateFrom} onChange={e => updateFilter('dateFrom', e.target.value)} className="w-full text-sm py-3" placeholder="From" />
+              <Input type="date" value={filters.dateTo} onChange={e => updateFilter('dateTo', e.target.value)} className="w-full text-sm py-3" placeholder="To" />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Advance Amount Range</label>
+            <div className="grid grid-cols-2 gap-3">
+              <Input type="number" placeholder="Min (₹)" value={filters.advanceMin} onChange={e => updateFilter('advanceMin', e.target.value)} className="w-full py-3" />
+              <Input type="number" placeholder="Max (₹)" value={filters.advanceMax} onChange={e => updateFilter('advanceMax', e.target.value)} className="w-full py-3" />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Total Rate Range</label>
+            <div className="grid grid-cols-2 gap-3">
+              <Input type="number" placeholder="Min (₹)" value={filters.rateMin} onChange={e => updateFilter('rateMin', e.target.value)} className="w-full py-3" />
+              <Input type="number" placeholder="Max (₹)" value={filters.rateMax} onChange={e => updateFilter('rateMax', e.target.value)} className="w-full py-3" />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-semibold uppercase tracking-wider text-on-surface-variant">Customer Details</label>
+            <Input type="text" placeholder="Name" value={filters.name} onChange={e => updateFilter('name', e.target.value)} className="w-full py-3 mb-3" />
+            <Input type="text" placeholder="Mobile Number" value={filters.mobile} onChange={e => updateFilter('mobile', e.target.value)} className="w-full py-3 mb-3" />
+            <Input type="text" placeholder="Address" value={filters.address} onChange={e => updateFilter('address', e.target.value)} className="w-full py-3" />
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-outline-variant bg-surface-container-lowest shrink-0 grid grid-cols-2 gap-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <Button variant="outline" onClick={clearFilters} className="w-full h-12">
+            Clear All
+          </Button>
+          <Button onClick={() => setIsFiltersOpen(false)} className="w-full h-12">
+            Apply Filters
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

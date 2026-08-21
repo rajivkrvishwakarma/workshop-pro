@@ -72,17 +72,32 @@ export async function PUT(
     
     if (isSubmit) {
       // Find the "New" or "Pending" status
-      const status = await db.query.statuses.findFirst({
+      let status = await db.query.statuses.findFirst({
         where: ilike(statuses.name, '%new%'),
       });
-      if (status) {
-        orderData.statusId = status.id;
-      } else {
+      
+      if (!status) {
         // Fallback: pick the first status if "new" doesn't exist
-        const anyStatus = await db.query.statuses.findFirst({
+        status = await db.query.statuses.findFirst({
           orderBy: (s, { asc }) => [asc(s.sequence)],
         });
-        if (anyStatus) orderData.statusId = anyStatus.id;
+      }
+
+      // If absolutely no statuses exist in the DB, create a default "New" status
+      if (!status) {
+        const { v4: uuidv4 } = require('uuid');
+        const newStatus = {
+          id: uuidv4(),
+          name: 'New',
+          color: '#3b82f6', // blue
+          sequence: 1
+        };
+        await db.insert(statuses).values(newStatus);
+        status = newStatus as any;
+      }
+
+      if (status) {
+        orderData.statusId = status.id;
       }
     }
     

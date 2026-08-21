@@ -9,7 +9,7 @@ export const useGetOrder = (id?: string | null) => {
   });
 };
 
-export const useGetOrders = (filters?: { search?: string, statusId?: string, customerId?: string }) => {
+export const useGetOrders = (filters?: Record<string, any>) => {
   return useQuery({
     queryKey: ['orders', filters],
     queryFn: () => get<any>('/orders', filters).then(res => res.data),

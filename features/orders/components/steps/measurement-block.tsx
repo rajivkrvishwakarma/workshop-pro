@@ -81,14 +81,15 @@ function MeasurementBlockContent({ item, onChange, onDelete, index }: Measuremen
     <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm flex flex-col md:flex-row mb-6">
       
       {/* Canvas Area (Left) */}
-      <div className="relative flex-[2] min-h-[400px] border-b md:border-b-0 md:border-r border-outline-variant bg-background">
-        <div className="absolute top-2 left-4 z-10 flex items-center gap-3">
-          <div className="bg-primary/10 text-primary font-bold px-3 py-1 rounded-full text-sm">
-            Item {index + 1}
+      <div className="flex-[2] flex flex-col min-h-[400px] border-b md:border-b-0 md:border-r border-outline-variant bg-background">
+        {/* Item Header */}
+        <div className="flex items-center justify-between p-3 shrink-0 w-full border-b border-outline-variant/30">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 text-primary font-bold px-3 py-1 rounded-full text-sm">
+              Item {index + 1}
+            </div>
+            <h3 className="font-headline-sm text-lg text-on-surface">{category}</h3>
           </div>
-          <h3 className="font-headline-sm text-lg text-on-surface">{category}</h3>
-        </div>
-        <div className="absolute top-2 right-2 z-10">
           <button 
             onClick={onDelete}
             className="w-8 h-8 flex items-center justify-center text-destructive hover:bg-destructive/10 rounded-full transition-colors"
@@ -98,7 +99,7 @@ function MeasurementBlockContent({ item, onChange, onDelete, index }: Measuremen
           </button>
         </div>
         
-        <div className="w-full h-full absolute inset-0">
+        <div className="w-full flex-1 relative min-h-[400px]">
           <AnnotationEditor 
             imageUrl={productData?.imageUrl} 
             canvasWidth={Number(width) || 0} 
