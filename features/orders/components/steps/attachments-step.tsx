@@ -18,9 +18,6 @@ export function AttachmentsStep({ orderId, onNext, onBack, defaultData }: { orde
   const [attachments, setAttachments] = useState<AttachmentItem[]>(defaultData?.attachments || []);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Camera: use hidden file input with capture="environment" for native camera on mobile
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-
   // Audio State
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -179,16 +176,6 @@ export function AttachmentsStep({ orderId, onNext, onBack, defaultData }: { orde
   return (
     <div className="flex-1 w-full flex flex-col relative h-full bg-background md:bg-transparent">
       <MobileHeader title="Attachments" onBack={onBack} />
-
-      {/* Hidden camera input — opens native phone camera directly on mobile */}
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={handleCameraCapture}
-      />
       
       <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col p-4 md:pt-4 overflow-y-auto">
         <div className="hidden md:block mb-8">
@@ -199,13 +186,17 @@ export function AttachmentsStep({ orderId, onNext, onBack, defaultData }: { orde
         <div className="space-y-6 flex-1 pb-32 md:pb-8">
           <div className="bg-surface-container-low border border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center text-center">
             <div className="flex gap-4 mb-4">
-              {/* Camera button — triggers native camera on mobile */}
-              <button 
-                onClick={() => cameraInputRef.current?.click()}
-                className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors"
-              >
+              {/* Camera button — native label wrapping input for guaranteed camera intent */}
+              <label className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors cursor-pointer">
                 <Camera className="w-8 h-8" />
-              </button>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  capture="environment" 
+                  className="hidden" 
+                  onChange={handleCameraCapture} 
+                />
+              </label>
               <label className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors cursor-pointer">
                 <ImageIcon className="w-8 h-8" />
                 <input type="file" multiple accept="image/*" className="hidden" onChange={handleFileChange} />
