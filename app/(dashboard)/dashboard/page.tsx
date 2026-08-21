@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Users, ClipboardList, DollarSign, UserCog, AlertCircle, Clock, Activity } from "lucide-react";
+import { Users, ClipboardList, DollarSign, UserCog, AlertCircle, Clock, Activity, Wallet } from "lucide-react";
 import { useDashboardStats } from "@/hooks/api/use-dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow, format, subDays } from "date-fns";
@@ -27,11 +27,16 @@ export default function DashboardHomePage() {
   const { data: stats, isLoading, isError } = useDashboardStats();
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+    return new Intl.NumberFormat('en-IN', { 
+      style: 'currency', 
+      currency: 'INR',
+      notation: 'compact',
+      maximumFractionDigits: 2
+    }).format(amount);
   };
 
   return (
-    <div className="flex mb-10 flex-col gap-4 md:gap-6 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+    <div className="flex mb-10 flex-col gap-4 md:gap-6 w-full max-w-7xl mx-auto p-2 md:p-6 lg:p-8">
       <PageHeader
         title="Dashboard"
         description="Overview of your workshop performance"
@@ -48,16 +53,16 @@ export default function DashboardHomePage() {
           <>
       <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
         {/* Total Revenue */}
-        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none">
+            <DollarSign className="h-24 w-24 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground relative z-10">
               Total Revenue
             </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-              <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             {isLoading ? <Skeleton className="h-8 w-32 mt-1" /> : (
               <div className="text-2xl font-bold text-foreground">
                 {formatCurrency(stats?.totalRevenue || 0)}
@@ -69,17 +74,39 @@ export default function DashboardHomePage() {
           </CardContent>
         </Card>
 
+        {/* Total Advance */}
+        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none">
+            <Wallet className="h-24 w-24 text-violet-600 dark:text-violet-400" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground relative z-10">
+              Total Advance
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="relative z-10">
+            {isLoading ? <Skeleton className="h-8 w-32 mt-1" /> : (
+              <div className="text-2xl font-bold text-foreground">
+                {formatCurrency(stats?.totalAdvance || 0)}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Advances collected
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Total Due */}
-        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none">
+            <AlertCircle className="h-24 w-24 text-red-600 dark:text-red-400" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground relative z-10">
               Total Due
             </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-              <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             {isLoading ? <Skeleton className="h-8 w-32 mt-1" /> : (
               <div className="text-2xl font-bold text-foreground">
                 {formatCurrency(stats?.totalDue || 0)}
@@ -92,16 +119,16 @@ export default function DashboardHomePage() {
         </Card>
 
         {/* Active Orders */}
-        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none">
+            <ClipboardList className="h-24 w-24 text-blue-600 dark:text-blue-400" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground relative z-10">
               Active Orders
             </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <ClipboardList className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             {isLoading ? <Skeleton className="h-8 w-20 mt-1" /> : (
               <div className="text-2xl font-bold text-foreground">
                 {stats?.activeOrders || 0}
@@ -114,16 +141,16 @@ export default function DashboardHomePage() {
         </Card>
 
         {/* Today's Deadlines */}
-        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none">
+            <Clock className="h-24 w-24 text-amber-600 dark:text-amber-400" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground relative z-10">
               Today's Deadlines
             </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             {isLoading ? <Skeleton className="h-8 w-20 mt-1" /> : (
               <div className="text-2xl font-bold text-foreground">
                 {stats?.todayDeadlines || 0}
@@ -136,16 +163,16 @@ export default function DashboardHomePage() {
         </Card>
 
         {/* Customers */}
-        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none">
+            <Users className="h-24 w-24 text-purple-600 dark:text-purple-400" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground relative z-10">
               Total Customers
             </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-              <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             {isLoading ? <Skeleton className="h-8 w-20 mt-1" /> : (
               <div className="text-2xl font-bold text-foreground">
                 {stats?.totalCustomers || 0}
@@ -158,16 +185,16 @@ export default function DashboardHomePage() {
         </Card>
 
         {/* Staff Members */}
-        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="shadow-sm border-slate-200/60 dark:border-slate-800 transition-all hover:shadow-md relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none">
+            <UserCog className="h-24 w-24 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground relative z-10">
               Staff Members
             </CardTitle>
-            <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-              <UserCog className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             {isLoading ? <Skeleton className="h-8 w-20 mt-1" /> : (
               <div className="text-2xl font-bold text-foreground">
                 {stats?.totalStaff || 0}

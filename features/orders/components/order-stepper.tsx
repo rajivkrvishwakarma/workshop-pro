@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CustomerStep } from './steps/customer-step';
 import { ProductsManagerStep } from './steps/products-manager-step';
 import { AttachmentsStep } from './steps/attachments-step';
@@ -14,7 +14,11 @@ import { get } from '@/lib/api/axios';
 
 const steps = ['Customer', 'Products', 'Attachments', 'Commercial'];
 
-export function OrderStepper() {
+interface OrderStepperProps {
+  initialOrderId?: string;
+}
+
+export function OrderStepper({ initialOrderId }: OrderStepperProps = {}) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [orderData, setOrderData] = useState<any>({});
@@ -25,6 +29,14 @@ export function OrderStepper() {
   const { mutateAsync: createCustomerAsync } = useCreateCustomer();
   const { mutateAsync: createOrderAsync } = useCreateOrder();
   const { mutateAsync: updateOrderAsync } = useUpdateOrder();
+
+  // Auto-resume draft if initialOrderId is provided (e.g. from "Edit" button)
+  useEffect(() => {
+    if (initialOrderId) {
+      handleResumeDraft(initialOrderId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialOrderId]);
 
   const handleResumeDraft = async (draftOrderId: string) => {
     setIsProcessing(true);

@@ -6,11 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { Loader2, Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { authService } from "@/services/auth.service";
 import { ROUTES } from "@/constants/routes";
 import { useAuth } from "@/providers/auth-provider";
@@ -66,91 +63,136 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      <div className="space-y-2">
-        <label htmlFor="email" className="block text-[13px] font-semibold text-slate-700 tracking-wide">
-          Email
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      
+      {/* Email field */}
+      <div className="space-y-1.5">
+        <label htmlFor="email" className="block text-[12px] font-semibold text-blue-300/70 uppercase tracking-widest">
+          Email Address
         </label>
-        <Input
-          id="email"
-          type="email"
-          autoCapitalize="none"
-          autoComplete="email"
-          autoCorrect="off"
-          disabled={isLoading}
-          {...form.register("email")}
-          className="h-12 bg-white border-slate-300 text-slate-900 rounded-lg focus-visible:ring-1 focus-visible:ring-[#2563EB] focus-visible:border-[#2563EB] shadow-sm text-[15px]"
-        />
+        <div className="relative group">
+          {/* Glow ring on focus */}
+          <div className="absolute -inset-px rounded-xl bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-violet-500/0 group-focus-within:from-blue-500/40 group-focus-within:via-blue-400/20 group-focus-within:to-violet-500/30 transition-all duration-300 rounded-xl blur-sm pointer-events-none" />
+          
+          <div className="relative flex items-center bg-white/[0.07] border border-white/10 rounded-xl group-focus-within:border-blue-500/50 transition-colors duration-200">
+            <Mail className="absolute left-4 w-4 h-4 text-blue-400/60 group-focus-within:text-blue-400 transition-colors shrink-0" />
+            <input
+              id="email"
+              type="email"
+              autoCapitalize="none"
+              autoComplete="email"
+              autoCorrect="off"
+              disabled={isLoading}
+              placeholder="you@example.com"
+              {...form.register("email")}
+              className="w-full h-13 pl-11 pr-4 py-3.5 bg-transparent text-white placeholder:text-white/25 text-[15px] rounded-xl outline-none"
+            />
+          </div>
+        </div>
         {form.formState.errors.email && (
-          <p className="text-sm text-red-500">
-            {form.formState.errors.email.message}
+          <p className="text-xs text-red-400 flex items-center gap-1 pl-1">
+            <span>⚠</span> {form.formState.errors.email.message}
           </p>
         )}
       </div>
-      
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label htmlFor="password" className="block text-[13px] font-semibold text-slate-700 tracking-wide">
-            Password
-          </label>
-          <Link href="/forgot-password" className="text-[13px] font-bold text-[#2563EB] hover:text-blue-700">
-            Forgot Password?
-          </Link>
-        </div>
-        <div className="relative">
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
-            placeholder="••••••••"
-            disabled={isLoading}
-            {...form.register("password")}
-            className="h-12 pr-12 bg-white border-slate-300 text-slate-900 rounded-lg focus-visible:ring-1 focus-visible:ring-[#2563EB] focus-visible:border-[#2563EB] shadow-sm text-[15px] placeholder:tracking-[0.3em] placeholder:text-slate-700 placeholder:text-lg"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-800 p-1"
-            tabIndex={-1}
-          >
-            {showPassword ? (
-              <EyeOff className="h-5 w-5" />
-            ) : (
-              <Eye className="h-5 w-5" />
-            )}
-          </button>
+
+      {/* Password field */}
+      <div className="space-y-1.5">
+        <label htmlFor="password" className="block text-[12px] font-semibold text-blue-300/70 uppercase tracking-widest">
+          Password
+        </label>
+        <div className="relative group">
+          {/* Glow ring on focus */}
+          <div className="absolute -inset-px rounded-xl bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-violet-500/0 group-focus-within:from-blue-500/40 group-focus-within:via-blue-400/20 group-focus-within:to-violet-500/30 transition-all duration-300 blur-sm pointer-events-none" />
+
+          <div className="relative flex items-center bg-white/[0.07] border border-white/10 rounded-xl group-focus-within:border-blue-500/50 transition-colors duration-200">
+            <Lock className="absolute left-4 w-4 h-4 text-blue-400/60 group-focus-within:text-blue-400 transition-colors shrink-0" />
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              disabled={isLoading}
+              {...form.register("password")}
+              className="w-full h-13 pl-11 pr-12 py-3.5 bg-transparent text-white placeholder:text-white/25 text-[15px] rounded-xl outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 text-white/30 hover:text-white/70 transition-colors p-1"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
         {form.formState.errors.password && (
-          <p className="text-sm text-red-500">
-            {form.formState.errors.password.message}
+          <p className="text-xs text-red-400 flex items-center gap-1 pl-1">
+            <span>⚠</span> {form.formState.errors.password.message}
           </p>
         )}
       </div>
 
-      <div className="flex items-center space-x-3 pt-1 pb-1">
-        <input 
-          type="checkbox" 
-          id="remember" 
-          className="h-4 w-4 rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB] cursor-pointer"
-        />
-        <label htmlFor="remember" className="text-[15px] text-slate-600 font-medium cursor-pointer">
-          Remember Me
-        </label>
+      {/* {/* Forgot Password — commented out as requested */}
+      {/* <div className="flex justify-end">
+        <Link href="/forgot-password" className="text-[13px] font-bold text-blue-400 hover:text-blue-300">
+          Forgot Password?
+        </Link>
+      </div> */}
+
+      {/* Remember Me — commented out as requested */}
+      {/* <div className="flex items-center space-x-3">
+        <input type="checkbox" id="remember" className="h-4 w-4 rounded border-white/20 text-blue-500 cursor-pointer" />
+        <label htmlFor="remember" className="text-[15px] text-white/50 font-medium cursor-pointer">Remember Me</label>
+      </div> */}
+
+      {/* Submit Button */}
+      <div className="pt-3">
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="
+            relative w-full h-14 rounded-xl overflow-hidden
+            font-bold text-[16px] text-white
+            disabled:opacity-70 disabled:cursor-not-allowed
+            transition-all duration-200 active:scale-[0.98]
+            group
+          "
+        >
+          {/* Gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-violet-600 group-hover:from-blue-500 group-hover:via-blue-400 group-hover:to-violet-500 transition-all duration-300" />
+          
+          {/* Shine effect */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/15 to-transparent" />
+          
+          {/* Bottom shadow glow */}
+          <div className="absolute -bottom-2 inset-x-4 h-6 bg-blue-500/40 blur-lg rounded-full" />
+          
+          {/* Content */}
+          <span className="relative flex items-center justify-center gap-2.5">
+            {isLoading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign In</span>
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+              </>
+            )}
+          </span>
+        </button>
       </div>
 
-      <Button 
-        disabled={isLoading} 
-        className="w-full h-[52px] rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-[16px] flex items-center justify-center transition-colors shadow-sm"
-      >
-        {isLoading ? (
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        ) : (
-          <>
-            Login
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </>
-        )}
-      </Button>
+      {/* Bottom hint */}
+      <p className="text-center text-white/20 text-xs pt-1">
+        Workshop Pro · Secure Login
+      </p>
     </form>
   );
 }
