@@ -3,6 +3,7 @@ import { get } from '@/lib/api/axios';
 
 export interface DashboardStats {
   totalRevenue: number;
+  totalAdvance: number;
   totalCustomers: number;
   totalStaff: number;
   activeOrders: number;

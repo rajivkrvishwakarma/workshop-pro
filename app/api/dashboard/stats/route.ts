@@ -54,21 +54,35 @@ export async function GET(req: Request) {
       return acc;
     }, {} as Record<string, number>);
 
+    let totalAdvance = 0;
+
     for (const order of allOrders) {
       // Active Orders
       if (order.statusId && !completedStatusIds.includes(order.statusId)) {
         activeOrdersCount++;
       }
 
+      // Calculate Advances
+      const advance = Number(order.advanceAmount || 0);
+      totalAdvance += advance;
+
       // Total Due
-      if (order.estimatedAmount) {
-        const advance = Number(order.advanceAmount || 0);
-        const paid = paymentMap[order.id] || 0;
-        const discount = Number(order.discount || 0);
-        const due = Number(order.estimatedAmount) - advance - paid - discount;
-        if (due > 0) {
-          totalDue += due;
-        }
+      let currentOrderEstimated = Number(order.estimatedAmount || 0);
+      if (!currentOrderEstimated) {
+         if (order.rateType === 'per_kg' && order.estimatedRate && order.expectedWeight) {
+             currentOrderEstimated = Number(order.estimatedRate) * Number(order.expectedWeight);
+         } else if (order.rateType === 'fixed' && order.estimatedRate) {
+             currentOrderEstimated = Number(order.estimatedRate);
+         } else if (order.estimatedRate) {
+             currentOrderEstimated = Number(order.estimatedRate);
+         }
+      }
+
+      const paid = paymentMap[order.id] || 0;
+      const discount = Number(order.discount || 0);
+      const due = currentOrderEstimated - advance - paid - discount;
+      if (due > 0) {
+        totalDue += due;
       }
 
       // Today Deadlines
@@ -96,7 +110,8 @@ export async function GET(req: Request) {
     return NextResponse.json({
       success: true,
       data: {
-        totalRevenue,
+        totalRevenue: totalRevenue + totalAdvance,
+        totalAdvance,
         totalCustomers,
         totalStaff,
         activeOrders: activeOrdersCount,
