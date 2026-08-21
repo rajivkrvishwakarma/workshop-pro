@@ -1,23 +1,11 @@
 "use client";
 
 import { Bell, Search, Menu, ArrowLeft } from "lucide-react";
-import { ThemeToggle } from "@/components/common/theme-toggle";
 import { InstallPwaButton } from "@/components/common/install-pwa-button";
+import { ThemeToggle } from "@/components/common/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/providers/auth-provider";
 import { useRouter } from "next/navigation";
-import { authService } from "@/services/auth.service";
-import { ROUTES } from "@/constants/routes";
 import { usePathname } from "next/navigation";
 
 interface TopNavbarProps {
@@ -25,7 +13,6 @@ interface TopNavbarProps {
 }
 
 export function TopNavbar({ onMenuClick }: TopNavbarProps) {
-  const { user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -41,17 +28,8 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
     return '';
   };
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      window.location.href = ROUTES.LOGIN;
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
-
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-outline-variant bg-surface px-4 shadow-sm md:px-6">
+    <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-outline-variant bg-surface px-4 shadow-sm md:px-6">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           {isSubPage ? (
@@ -64,7 +42,8 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
               <ArrowLeft className="h-5 w-5" />
               <span className="sr-only">Go Back</span>
             </Button>
-          ) : onMenuClick ? (
+          ) : null}
+          {/* onMenuClick ? (
             <Button
               variant="ghost"
               size="icon"
@@ -74,7 +53,7 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle Menu</span>
             </Button>
-          ) : null}
+          ) : null */}
           <h1 className="text-lg font-bold text-primary md:hidden truncate max-w-[180px]">
             {getPageTitle(pathname)}
           </h1>
@@ -89,45 +68,16 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <InstallPwaButton />
-        <ThemeToggle className="hidden md:flex" />
+        
+        <ThemeToggle />
 
-        <Button variant="ghost" size="icon" className="relative">
+        {/* <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute right-1 top-1 flex h-2 w-2 rounded-full bg-red-600"></span>
           <span className="sr-only">Notifications</span>
-        </Button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src="/placeholder-avatar.jpg" alt={user?.firstName || "User"} />
-                <AvatarFallback>{user?.firstName?.charAt(0) || "U"}</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email}
-                </p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push(ROUTES.SETTINGS)}>
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        </Button> */}
       </div>
     </header>
   );
