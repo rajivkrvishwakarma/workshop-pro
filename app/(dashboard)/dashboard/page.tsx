@@ -35,6 +35,84 @@ export default function DashboardHomePage() {
     }).format(amount);
   };
 
+  // ── Full-page skeleton while loading ──────────────────────────────────────
+  if (isLoading) {
+    return (
+      <div className="flex mb-10 flex-col gap-4 md:gap-6 w-full max-w-7xl mx-auto p-2 md:p-6 lg:p-8 animate-pulse">
+        {/* Header skeleton */}
+        <div className="space-y-2 mb-2">
+          <Skeleton className="h-7 w-36" />
+          <Skeleton className="h-4 w-56" />
+        </div>
+
+        {/* Stat cards skeleton — 2 col on mobile, 4 on xl */}
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <Card key={i} className="shadow-sm border-slate-200/60 dark:border-slate-800 overflow-hidden">
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-28" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-24 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Chart + activity skeleton */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-2">
+          {/* Chart card */}
+          <Card className="col-span-1 lg:col-span-4 shadow-sm border-slate-200/60 dark:border-slate-800">
+            <CardHeader>
+              <Skeleton className="h-5 w-48 mb-1" />
+              <Skeleton className="h-3 w-64" />
+            </CardHeader>
+            <CardContent className="px-4">
+              <div className="h-[250px] sm:h-[300px] w-full mt-2 flex flex-col justify-end gap-3">
+                {/* Fake bar chart */}
+                <div className="flex items-end gap-2 h-[200px] w-full">
+                  {[55, 80, 45, 90, 60, 75, 50].map((h, i) => (
+                    <Skeleton key={i} className="flex-1 rounded-t-md" style={{ height: `${h}%` }} />
+                  ))}
+                </div>
+                {/* X-axis labels */}
+                <div className="flex gap-2">
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <Skeleton key={i} className="flex-1 h-3 rounded" />
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Activity card */}
+          <Card className="col-span-1 lg:col-span-3 shadow-sm border-slate-200/60 dark:border-slate-800">
+            <CardHeader>
+              <Skeleton className="h-5 w-36 mb-1" />
+              <Skeleton className="h-3 w-48" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                    <Skeleton className="h-3 w-10 shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Actual dashboard ───────────────────────────────────────────────────────
   return (
     <div className="flex mb-10 flex-col gap-4 md:gap-6 w-full max-w-7xl mx-auto p-2 md:p-6 lg:p-8">
       <PageHeader
@@ -63,11 +141,9 @@ export default function DashboardHomePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="relative z-10">
-            {isLoading ? <Skeleton className="h-8 w-32 mt-1" /> : (
-              <div className="text-2xl font-bold text-foreground">
-                {formatCurrency(stats?.totalRevenue || 0)}
-              </div>
-            )}
+            <div className="text-2xl font-bold text-foreground">
+              {formatCurrency(stats?.totalRevenue || 0)}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Collected payments
             </p>
@@ -85,11 +161,9 @@ export default function DashboardHomePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="relative z-10">
-            {isLoading ? <Skeleton className="h-8 w-32 mt-1" /> : (
-              <div className="text-2xl font-bold text-foreground">
-                {formatCurrency(stats?.totalAdvance || 0)}
-              </div>
-            )}
+            <div className="text-2xl font-bold text-foreground">
+              {formatCurrency(stats?.totalAdvance || 0)}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Advances collected
             </p>
@@ -107,11 +181,9 @@ export default function DashboardHomePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="relative z-10">
-            {isLoading ? <Skeleton className="h-8 w-32 mt-1" /> : (
-              <div className="text-2xl font-bold text-foreground">
-                {formatCurrency(stats?.totalDue || 0)}
-              </div>
-            )}
+            <div className="text-2xl font-bold text-foreground">
+              {formatCurrency(stats?.totalDue || 0)}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Pending from customers
             </p>
@@ -129,11 +201,9 @@ export default function DashboardHomePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="relative z-10">
-            {isLoading ? <Skeleton className="h-8 w-20 mt-1" /> : (
-              <div className="text-2xl font-bold text-foreground">
-                {stats?.activeOrders || 0}
-              </div>
-            )}
+            <div className="text-2xl font-bold text-foreground">
+              {stats?.activeOrders || 0}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Currently in progress
             </p>
@@ -151,11 +221,9 @@ export default function DashboardHomePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="relative z-10">
-            {isLoading ? <Skeleton className="h-8 w-20 mt-1" /> : (
-              <div className="text-2xl font-bold text-foreground">
-                {stats?.todayDeadlines || 0}
-              </div>
-            )}
+            <div className="text-2xl font-bold text-foreground">
+              {stats?.todayDeadlines || 0}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Orders due today
             </p>
@@ -173,11 +241,9 @@ export default function DashboardHomePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="relative z-10">
-            {isLoading ? <Skeleton className="h-8 w-20 mt-1" /> : (
-              <div className="text-2xl font-bold text-foreground">
-                {stats?.totalCustomers || 0}
-              </div>
-            )}
+            <div className="text-2xl font-bold text-foreground">
+              {stats?.totalCustomers || 0}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Registered in system
             </p>
@@ -195,11 +261,9 @@ export default function DashboardHomePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="relative z-10">
-            {isLoading ? <Skeleton className="h-8 w-20 mt-1" /> : (
-              <div className="text-2xl font-bold text-foreground">
-                {stats?.totalStaff || 0}
-              </div>
-            )}
+            <div className="text-2xl font-bold text-foreground">
+              {stats?.totalStaff || 0}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Active employees
             </p>
@@ -272,19 +336,7 @@ export default function DashboardHomePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex items-center gap-4">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : stats?.recentActivities && stats.recentActivities.length > 0 ? (
+            {stats?.recentActivities && stats.recentActivities.length > 0 ? (
               <div className="space-y-6">
                 {stats.recentActivities.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-4">
