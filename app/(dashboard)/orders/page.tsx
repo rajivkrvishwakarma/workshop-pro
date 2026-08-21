@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useGetOrders } from '@/hooks/api/use-orders';
 import { useGetStatuses } from '@/hooks/api/use-statuses';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, Filter, Eye, Clock, Phone, MapPin, X } from 'lucide-react';
+import { Loader2, Search, Filter, Eye, Clock, Phone, MapPin, X, Pencil } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -195,13 +195,28 @@ export default function OrdersPage() {
                         : 'No items'}
                     </span>
                   </div>
-                  <Button 
-                    size="sm"
-                    className="h-8 rounded-full px-4 text-xs font-medium bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
-                    onClick={() => router.push(`/orders/${order.id}`)}
-                  >
-                    View Details
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {isDraft && (
+                      <Button 
+                        size="sm"
+                        className="h-8 rounded-full px-4 text-xs font-medium bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white transition-colors border border-amber-500/30"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/orders/new?orderId=${order.id}`);
+                        }}
+                      >
+                        <Pencil className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                    )}
+                    <Button 
+                      size="sm"
+                      className="h-8 rounded-full px-4 text-xs font-medium bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                      onClick={() => router.push(`/orders/${order.id}`)}
+                    >
+                      View Details
+                    </Button>
+                  </div>
                 </div>
               </div>
             );
