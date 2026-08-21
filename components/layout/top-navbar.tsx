@@ -2,6 +2,7 @@
 
 import { Bell, Search, Menu, ArrowLeft } from "lucide-react";
 import { ThemeToggle } from "@/components/common/theme-toggle";
+import { InstallPwaButton } from "@/components/common/install-pwa-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -89,6 +90,7 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
       </div>
 
       <div className="flex items-center gap-4">
+        <InstallPwaButton />
         <ThemeToggle className="hidden md:flex" />
 
         <Button variant="ghost" size="icon" className="relative">

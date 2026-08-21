@@ -47,17 +47,17 @@ export function EditorToolbar() {
 
   return (
     <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50">
-      <div className="flex items-center gap-1 bg-background/95 backdrop-blur shadow-md border rounded-lg p-1 max-w-[95vw] overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <div className="flex items-center gap-1 border-r pr-1 mr-1">
-          <button onClick={undo} disabled={!canUndo} className={`p-2 rounded-md transition-colors ${canUndo ? 'text-muted-foreground hover:bg-muted hover:text-foreground' : 'text-muted-foreground/30 cursor-not-allowed'}`} title="Undo (Ctrl+Z)"><Undo2 className="w-4 h-4" /></button>
-          <button onClick={redo} disabled={!canRedo} className={`p-2 rounded-md transition-colors ${canRedo ? 'text-muted-foreground hover:bg-muted hover:text-foreground' : 'text-muted-foreground/30 cursor-not-allowed'}`} title="Redo (Ctrl+Y)"><Redo2 className="w-4 h-4" /></button>
+      <div className="flex items-center gap-1 bg-background/95 backdrop-blur shadow-md border rounded-lg p-1 max-w-[95vw] overflow-x-auto touch-pan-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="flex items-center gap-1 border-r pr-1 mr-1 shrink-0">
+          <button onClick={undo} disabled={!canUndo} className={`p-2 shrink-0 rounded-md transition-colors ${canUndo ? 'text-muted-foreground hover:bg-muted hover:text-foreground' : 'text-muted-foreground/30 cursor-not-allowed'}`} title="Undo (Ctrl+Z)"><Undo2 className="w-4 h-4" /></button>
+          <button onClick={redo} disabled={!canRedo} className={`p-2 shrink-0 rounded-md transition-colors ${canRedo ? 'text-muted-foreground hover:bg-muted hover:text-foreground' : 'text-muted-foreground/30 cursor-not-allowed'}`} title="Redo (Ctrl+Y)"><Redo2 className="w-4 h-4" /></button>
         </div>
         {TOOLS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTool(t.id)}
             title={t.label}
-            className={`p-2 rounded-md transition-colors ${
+            className={`p-2 shrink-0 rounded-md transition-colors ${
               tool === t.id 
                 ? 'bg-primary text-primary-foreground shadow-sm' 
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -66,8 +66,8 @@ export function EditorToolbar() {
             {t.icon}
           </button>
         ))}
-        <div className="flex items-center border-l pl-1 ml-1">
-          <button onClick={handleExport} className="p-2 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Export as PNG"><Download className="w-4 h-4" /></button>
+        <div className="flex items-center border-l pl-1 ml-1 shrink-0">
+          <button onClick={handleExport} className="p-2 shrink-0 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground" title="Export as PNG"><Download className="w-4 h-4" /></button>
         </div>
       </div>
 

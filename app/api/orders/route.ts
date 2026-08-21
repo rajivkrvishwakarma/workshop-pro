@@ -42,10 +42,29 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') || undefined;
     const statusId = searchParams.get('statusId') || undefined;
     const customerId = searchParams.get('customerId') || undefined;
+    
+    // New Advanced Filters
+    const dateFrom = searchParams.get('dateFrom') || undefined;
+    const dateTo = searchParams.get('dateTo') || undefined;
+    const name = searchParams.get('name') || undefined;
+    const mobile = searchParams.get('mobile') || undefined;
+    const address = searchParams.get('address') || undefined;
+    
+    const parseNumber = (val: string | null) => val ? parseFloat(val) : undefined;
+    const advanceMin = parseNumber(searchParams.get('advanceMin'));
+    const advanceMax = parseNumber(searchParams.get('advanceMax'));
+    const rateMin = parseNumber(searchParams.get('rateMin'));
+    const rateMax = parseNumber(searchParams.get('rateMax'));
+
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
-    const orders = await OrderRepository.findAll({ search, statusId, customerId, limit, offset });
+    const orders = await OrderRepository.findAll({ 
+      search, statusId, customerId, 
+      dateFrom, dateTo, name, mobile, address, 
+      advanceMin, advanceMax, rateMin, rateMax, 
+      limit, offset 
+    });
     return NextResponse.json({ success: true, data: orders });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

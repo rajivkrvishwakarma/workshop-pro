@@ -187,7 +187,9 @@ export function OrderStepper() {
               <CheckCircle2 className="w-12 h-12" />
             </div>
             <h2 className="text-2xl font-bold mb-2">Order Captured!</h2>
-            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">The order has been successfully saved. You can process it further from the dashboard.</p>
+            <p className="text-muted-foreground mb-8 w-11/12 max-w-md mx-auto text-sm md:text-base">
+              The order has been successfully saved. You can process it further from the dashboard.
+            </p>
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
             <p className="text-xs text-muted-foreground mt-2">Redirecting to Dashboard...</p>
           </div>
